@@ -55,21 +55,29 @@ class Camera{
             this.Camera.updateProjectionMatrix();
         }
         if (this.orbit_state) {
-            const orbit_speed = 0.1;
+            const orbit_speed = 0.01; 
+            //convert current position to spherical coordinates
+            let spherical = new THREE.Spherical().setFromVector3(this.Camera.position.sub(earth.position));
             switch (this.orbit_state) {
                 case 'left':
-                    this.Camera.position.x -= orbit_speed;
+                    spherical.theta -= orbit_speed;
                     break;
                 case 'right':
-                    this.Camera.position.x += orbit_speed;
+                    spherical.theta += orbit_speed;
                     break;
                 case 'up':
-                    this.Camera.position.y += orbit_speed;
+                    spherical.phi -= orbit_speed;
                     break;
                 case 'down':
-                    this.Camera.position.y -= orbit_speed;
+                    spherical.phi += orbit_speed;
                     break;
             }
+
+            //clamp phi to avoid flip at poles
+            spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+
+            //convert back to Cartesian coordinates
+            this.Camera.position.setFromSpherical(spherical).add(earth.position);
             this.Camera.lookAt(earth.position);
         }
     }
@@ -99,6 +107,7 @@ function toRadians(angle) {
     return angle * (Math.PI / 180);
 }
 
+//arcball
 function handleRotation(camera, delta_move) {
     const rotation_speed = 0.1;
     //calculate angular movement
