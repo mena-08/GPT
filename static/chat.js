@@ -10,7 +10,7 @@ document.getElementById('send-btn').addEventListener('click', function(event) {
 		displayMessage(`Me: ${message} \n\n`);
 		conversationHistory.push({"role": "user", "content": message});
 
-		fetch('http://localhost:5000/chat', {
+		fetch('http://ec2-51-20-76-149.eu-north-1.compute.amazonaws.com:8000/chat', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
