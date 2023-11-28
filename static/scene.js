@@ -27,7 +27,10 @@ const earth = earthSphere.getMesh();
 const moonSphere = new SphereObject();
 moonSphere.setTexture("moonTexture.jpg");
 const moon = moonSphere.getMesh();
-//moon.scale.set(0.3,0.3,0.3);
+moon.scale.set(0.3,0.3,0.3);
+moon.position.y = 8;
+moon.position.x = 8;
+
 scene.add(earth);
 //[1.9378, 1.1552, 4.462]
 var argentina = latLongToCartesian(40, -12.6, 5);
