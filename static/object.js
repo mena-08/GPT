@@ -1,8 +1,9 @@
 class SphereObject {
-    constructor(radius = 5, widthSegments = 128, heightSegments = 128, texturePath = '10KEARTH.jpg') {
+    constructor(radius = 5, widthSegments = 128, heightSegments = 128, texturePath = '10KEARTH.jpg', normalTexturePath = '8k_earth_normal_map.png') {
         const geometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
         const texture = new THREE.TextureLoader().load(texturePath);
-        const material = new THREE.MeshBasicMaterial({ map: texture });
+        const normal_map = new THREE.TextureLoader().load(normalTexturePath);
+        const material = new THREE.MeshStandardMaterial({ map: texture, normalMap:normal_map });
         this.mesh = new THREE.Mesh(geometry, material);
     }
 

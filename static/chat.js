@@ -58,9 +58,12 @@ function handleChatGPTResponse(reply) {
         // Check for specific directions
         if (/in/i.test(reply)) {
             handleCameraAdjustment("in");
-        } else if (/far/i.test(reply)) {
-            handleCameraAdjustment("far");
+        } else if (/out/i.test(reply)) {
+            handleCameraAdjustment("out");
 		}
+	}
+	if(/stop/i.test(reply)){
+		handleCameraAdjustment("stop");
 	}
 }
 	
@@ -110,6 +113,8 @@ function handleCameraAdjustment(direction) {
 		case "in":
 			cameraZoom(camera2, direction);
 			break;
+		case "stop":
+			cameraStop(camera2);
 		default:
 			console.log("Unknown direction or not handled:", direction);
 	}

@@ -30,7 +30,6 @@ class Camera{
     }
 
     //transition for the camera
-
     //target to vector3 
     makeTransition(target){
         this.transition_target = new THREE.Vector3(target[0], target[1], target[2]);
@@ -39,20 +38,17 @@ class Camera{
 
     updateTransition(){
         if (this.transition_target) {
-        
-            //interpolate position - https://threejs.org/docs/?q=posit#api/en/math/Vector3
+        const distanceToTarget = this.Camera.position.distanceTo(this.transition_target);
+        if (distanceToTarget > 6) {
             this.Camera.position.lerp(this.transition_target, this.transition_speed);
-    
-            //continuosly looking at our object
-            //TODO: transfer any new object we want to watch
-            this.Camera.lookAt(earth.position);
-    
-             //if we're close enough we should stop
-            if (this.Camera.position.distanceTo(this.transition_target) < 1) {
-                this.Camera.position.set(this.transition_target.x, this.transition_target.y, this.transition_target.z);
-                this.transition_target = null;
-            }
-            this.Camera.updateProjectionMatrix();
+        } else {
+            this.transition_target = null;
+        }
+
+        // Continuously looking at our object
+        this.Camera.lookAt(earth.position);
+        this.Camera.updateProjectionMatrix();
+
         }
         if (this.orbit_state) {
             const orbit_speed = 0.01; 
@@ -134,16 +130,21 @@ function handleRotation(camera, delta_move) {
 
 
 function cameraZoom(camera, direction) {
-    if(direction === "far"){
-        var new_targe = camera.getPosition();
-        new_targe.z += 5;
+    if(direction === "out"){
+        var new_targe = camera.Camera.position;
+        new_targe.z += 2;
         camera.makeTransition(new_targe);
     }
     if(direction === "in"){
-        var new_targe = camera.getPosition();
-        new_targe.z += 5;
+        var new_targe = camera.Camera.position;
+        new_targe.z -= 2;
         camera.makeTransition(new_targe);
     }
+}
+
+
+function cameraStop(camera) {
+    camera.stopOrbit();
 }
 
 function cameraRotate(camera, direction){

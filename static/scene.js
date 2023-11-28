@@ -13,8 +13,13 @@ const canvas = renderer.domElement;
 canvas.addEventListener('wheel', handleZoom);
 
 //add the light the scene
-const light = new THREE.AmbientLight(0x404040);
+const light = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(light);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+directionalLight.position.set(20, 20, 20); 
+scene.add(directionalLight);
+
 
 //add the objects to our scene
 const earthSphere = new SphereObject();
