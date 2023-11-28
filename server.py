@@ -6,6 +6,7 @@ import os
 
 load_dotenv()
 app = Flask(__name__)
+app.debug = True
 CORS(app, resources={r"/chat": {"origins": "http://ec2-51-20-76-149.eu-north-1.compute.amazonaws.com:8000"}})
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
