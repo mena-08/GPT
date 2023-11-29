@@ -67,6 +67,12 @@ function handleChatGPTResponse(reply) {
 	if(/stop/i.test(reply)){
 		handleCameraAdjustment("stop");
 	}
+	if(/render/i.test(reply) && /moon/i.test(reply)){
+		scene.add(moon);
+	}
+	if(/moon/i.test(reply) && (/hide/i.test(reply) || /remove/i.test(reply) || /delete/i.test(reply) )){
+		scene.remove(moon);
+	}
 }
 
 function handleCameraAdjustment(direction) {
