@@ -102,12 +102,12 @@ class CubeObject {
 }
 
 function latLongToCartesian(lat, lon, radius) {
-    let latRad = THREE.MathUtils.degToRad(90 - lat);
-    let lonRad = THREE.MathUtils.degToRad(lon);
+    let lat_rad = THREE.MathUtils.degToRad(90 - lat);
+    let lon_rad = THREE.MathUtils.degToRad(lon);
 
-    let x = radius * Math.sin(latRad) * Math.cos(lonRad);
-    let y = radius * Math.cos(latRad);
-    let z = radius * Math.sin(latRad) * Math.sin(lonRad);
+    let x = radius * Math.sin(lat_rad) * Math.cos(lon_rad);
+    let y = radius * Math.cos(lat_rad);
+    let z = radius * Math.sin(lat_rad) * Math.sin(lon_rad);
 
     return { x, y, z };
 }

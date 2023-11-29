@@ -4,7 +4,6 @@ const camera2 = new Camera();
 const renderer = new THREE.WebGLRenderer();
 camera2.setPositionZ(20);
 
-
 //set up the renderer
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -20,7 +19,6 @@ const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(20, 20, 20); 
 scene.add(directionalLight);
 
-
 //add the objects to our scene
 const earthSphere = new SphereObject();
 const earth = earthSphere.getMesh();
@@ -30,13 +28,12 @@ const moon = moonSphere.getMesh();
 moon.scale.set(0.3,0.3,0.3);
 moon.position.y = 8;
 moon.position.x = 8;
-
 scene.add(earth);
-//[1.9378, 1.1552, 4.462]
-var argentina = latLongToCartesian(40, -12.6, 5);
-const cubeInstance = new CubeObject(argentina);
-const cube = cubeInstance.getMesh();
-scene.add(cube);
+
+// var italy = latLongToCartesian(40, -12.6, 5);
+// const cubeInstance = new CubeObject(italy);
+// const cube = cubeInstance.getMesh();
+// scene.add(cube);
 
 //animate - main function from our animation stuff
 //---------------------

@@ -130,6 +130,7 @@ function handleRotation(camera, delta_move) {
 
 
 function cameraZoom(camera, direction) {
+    //this should be uptaded as well, better approach fs\ 
     if(direction === "out"){
         var new_targe = camera.Camera.position;
         new_targe.z += 2;
