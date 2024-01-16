@@ -1,3 +1,4 @@
+
 // Creeatr the objects of our scene
 const scene = new THREE.Scene();
 const camera2 = new Camera();
@@ -23,7 +24,7 @@ scene.add(directionalLight);
 const earthSphere = new SphereObject();
 const earth = earthSphere.getMesh();
 const moonSphere = new SphereObject();
-moonSphere.setTexture("moonTexture.jpg");
+moonSphere.setTexture("images/moonTexture.jpg");
 const moon = moonSphere.getMesh();
 moon.scale.set(0.3,0.3,0.3);
 moon.position.y = 8;

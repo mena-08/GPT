@@ -1,0 +1,107 @@
+html, body {
+    font-family: 'Arial', sans-serif; /* Better font */
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    background: #f4f7f6;
+}
+
+#chat-container {
+    position: fixed;
+    bottom: 0;
+    right: 0; 
+    margin: 10px;
+    width: 400px;
+    max-width: 100%;
+
+    resize: both; 
+    overflow: auto; 
+    max-width: 60%; 
+    max-height: 60%; 
+}
+
+#chat-box {
+    background-color: #fff;
+    border: 1px solid #d1d1d1;
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+#messages {
+    height: 200px;
+    overflow-y: auto;
+    padding: 10px;
+    background: #e1e1e1; /* Light blue background for messages */
+    border-bottom: 2px solid #d1d1d1;
+}
+
+.message-bubble {
+    padding: 10px;
+    margin-left: auto;
+    border-radius: 20px;
+    background: #6b6a6a; /* Blue background for bubbles */
+    color: white;
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+.message-bubble-GPT {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 20px;
+    background: #007bff; /* Blue background for bubbles */
+    color: white;
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+#chat-input {
+    border: 1px solid #d1d1d1;
+    padding: 10px;
+    width: calc(100% - 60px);
+    box-sizing: border-box;
+    border-radius: 15px;
+    transition: border 0.3s; /* Smooth transition for focus */
+}
+
+#chat-input:focus {
+    border-color: #007bff; /* Highlight on focus */
+}
+
+#send-btn {
+    width: 50px;
+    border: none;
+    background: #007bff;
+    color: white;
+    cursor: pointer;
+    border-radius: 15px;
+    transition: background-color 0.3s; /* Smooth background transition */
+}
+
+#send-btn:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+}
+
+#chat-input, #send-btn {
+    height: 40px;
+    display: inline-block;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 600px) {
+    #chat-container {
+        width: 90%;
+    }
+}
+
+/* Additional styling for scrollbar */
+#messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+#messages::-webkit-scrollbar-thumb {
+    background: #007bff;
+    border-radius: 4px;
+}
