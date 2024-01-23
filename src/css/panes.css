@@ -1,0 +1,8 @@
+#pane-maps-container{
+    position: absolute; 
+    left: 150px; 
+    top: 120px; 
+    width: 75px; 
+    height: 75px; 
+    background-color: #666   
+}
