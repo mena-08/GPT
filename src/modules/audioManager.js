@@ -30,5 +30,5 @@ function stopRecording() {
     }
 }
 
-document.getElementById('start-record-btn').addEventListener('click', startRecording);
+document.getElementById('record-btn').addEventListener('click', startRecording);
 document.getElementById('stop-record-btn').addEventListener('click', stopRecording);

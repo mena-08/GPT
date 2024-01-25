@@ -1,113 +1,24 @@
-class SphereObject {
-    constructor(radius = 5, widthSegments = 128, heightSegments = 128, texturePath = 'images/10KEARTH.jpg', normalTexturePath = 'images/8k_earth_normal_map.png') {
-        const geometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
-        const texture = new THREE.TextureLoader().load(texturePath);
-        const normal_map = new THREE.TextureLoader().load(normalTexturePath);
-        const material = new THREE.MeshStandardMaterial({ map: texture, normalMap:normal_map });
-        this.mesh = new THREE.Mesh(geometry, material);
+import * as THREE from 'three';
+export class SphereClass {
+    constructor(textureURL) {
+        this.textureURL = textureURL;
+        this.textureLoader = new THREE.TextureLoader();
+        this.sphere = this.createSphere();
     }
 
-    setTexture(texturePath) {
-        const texture = new THREE.TextureLoader().load(texturePath);
-        this.mesh.material.map = texture;
-        //uodate the material 
-        this.mesh.material.needsUpdate = true; 
+    createSphere() {
+        const geometry = new THREE.SphereGeometry(5, 64, 64);
+        const material = new THREE.MeshBasicMaterial({ map: this.textureLoader.load(this.textureURL) });
+        return new THREE.Mesh(geometry, material);
     }
 
-    getMesh() {
-        return this.mesh;
+    updateTexture(url) {
+        const texture = this.textureLoader.load(url);
+        this.sphere.material.map = texture;
+        this.sphere.material.needsUpdate = true;
     }
 
-    setObjectPosition(position){
-        this.position.x = position[0];
-        this.position.y = position[1];
-        this.position.z = position[2];
+    getSphere() {
+        return this.sphere;
     }
-
-    getPosition(){
-        return [this.position.x, this.position.y, this.position.z];
-    }
-    
-    getModelViewMatrix(){
-        return this.modelViewMatrix();
-    }
-    
-    translateY(value){
-        this.translateY(value);
-    }
-    
-    translateX(value){
-        this.translateX(value);
-    }
-    
-    translateZ(value){
-        this.translateZ(value);
-    }
-    
-    rotateY(value){
-        this.rotateY(value);
-    }
-    
-    rotateX(value){
-        this.rotateX(value);
-    }
-    
-    rotateZ(value){
-        this.rotateZ(value);
-    }
-    //world to local
-    worldToLocal(){
-        return this.worldToLocal();
-    }
-
-    clone(){
-        return this.clone();
-    }
-}
-
-class CubeObject {
-    constructor(placing, dimensions = [0.2, 0.2, 0.2], color = 0xff0000) {
-        const geometry = new THREE.BoxGeometry(dimensions[0], dimensions[1], dimensions[2]);
-        geometry.translate(placing.x, placing.y, placing.z);
-        const material = new THREE.MeshBasicMaterial({ color });
-        this.mesh = new THREE.Mesh(geometry, material);
-        
-    }
-    
-    getMesh() {
-        return this.mesh;
-    }
-
-    setObjectPosition(position){
-        this.position.x = position[0];
-        this.position.y = position[1];
-        this.position.z = position[2];
-    }
-
-    getPosition(){
-        return [this.position.x, this.position.y, this.position.z];
-    }
-    
-    translateY(value){
-        this.translateY(value);
-    }
-    
-    translateX(value){
-        this.translateX(value);
-    }
-    
-    translateZ(value){
-        this.translateZ(value);
-    }
-}
-
-function latLongToCartesian(lat, lon, radius) {
-    let lat_rad = THREE.MathUtils.degToRad(90 - lat);
-    let lon_rad = THREE.MathUtils.degToRad(lon);
-
-    let x = radius * Math.sin(lat_rad) * Math.cos(lon_rad);
-    let y = radius * Math.cos(lat_rad);
-    let z = radius * Math.sin(lat_rad) * Math.sin(lon_rad);
-
-    return { x, y, z };
 }
