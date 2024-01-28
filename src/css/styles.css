@@ -1,3 +1,4 @@
+/* Style for body and general elements in our canvas */
 html, body {
     font-family: 'Arial', sans-serif;
     width: 100%;
@@ -8,109 +9,11 @@ html, body {
     margin: 0;
 }
 
-#chat-container {
-    position: fixed;
-    bottom: 0;
-    right: 0; 
-    margin: 10px;
-    width: 500px;
-    max-width: 100%;
-    resize: both; 
-    overflow: auto; 
-    max-width: 60%; 
-    max-height: 60%; 
-}
-
-#chat-box {
-    background-color: #fff;
-    border: 1px solid #d1d1d1;
-    border-radius: 15px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-}
-
-#messages {
-    height: 200px;
-    overflow-y: auto;
-    padding: 10px;
-    background: #e1e1e1;
-    border-bottom: 2px solid #d1d1d1;
-}
-
-.message-bubble {
-    padding: 10px;
-    margin-left: auto;
-    border-radius: 20px;
-    background: #6b6a6a;
-    color: white;
-    max-width: 70%;
-    word-wrap: break-word;
-}
-
-/*blue background for bubbles*/
-.message-bubble-GPT {
-    padding: 10px;
-    margin: 5px;
-    border-radius: 20px;
-    background: #007bff; 
-    color: white;
-    max-width: 70%;
-    word-wrap: break-word;
-}
-
-#chat-input {
-    border: 1px solid #d1d1d1;
-    padding: 10px;
-    width: calc(84% - 60px);
-    box-sizing: border-box;
-    border-radius: 15px;
-    transition: border 0.3s;
-}
-
-#chat-input:focus {
-    border-color: #007bff;
-}
-
-#send-btn {
-    width: 50px;
-    border: none;
-    background: #007bff;
-    color: white;
-    cursor: pointer;
-    border-radius: 15px;
-    transition: background-color 0.5s;
-}
-
-#record-btn.stopped {
-    width: 60px;
-    border: none;
-    background: #11c911;
-    color: white;
-    cursor: pointer;
-    border-radius: 15px;
-    transition: background-color 0.3s;
-}
-
-#record-btn.pressed {
-    width: 60px;
-    border: none;
-    background: #ff0000;
-    color: rgb(255, 255, 255);
-    cursor: pointer;
-    border-radius: 15px;
-    transition: background-color 0.3s;
-}
-
-#send-btn:hover {
-    background-color: #0056b3;
-}
-
 #chat-input, #send-btn, #record-btn {
     height: 40px;
     display: inline-block;
 }
 
-/* Responsive design for smaller screens */
 @media (max-width: 600px) {
     #chat-container {
         width: 90%;
@@ -124,13 +27,4 @@ html, body {
 #messages::-webkit-scrollbar-thumb {
     background: #007bff;
     border-radius: 4px;
-}
-
-/* move this to its own css file */
-#pane-maps-container{
-    position: absolute; 
-    right: 5%;
-    top: 5%; 
-    width: 300px; 
-    /* background-color: #000 */
 }

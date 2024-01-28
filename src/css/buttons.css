@@ -1,0 +1,34 @@
+/* Style css for the buttons (probs add more)*/
+#send-btn {
+    width: 50px;
+    border: none;
+    background: #007bff;
+    color: white;
+    cursor: pointer;
+    border-radius: 15px;
+    transition: background-color 0.5s;
+}
+
+#record-btn.stopped {
+    width: 60px;
+    border: none;
+    background: #11c911;
+    color: white;
+    cursor: pointer;
+    border-radius: 15px;
+    transition: background-color 0.3s;
+}
+
+#record-btn.pressed {
+    width: 60px;
+    border: none;
+    background: #ff0000;
+    color: rgb(255, 255, 255);
+    cursor: pointer;
+    border-radius: 15px;
+    transition: background-color 0.3s;
+}
+
+#send-btn:hover {
+    background-color: #0056b3;
+}

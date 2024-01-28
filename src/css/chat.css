@@ -1,0 +1,63 @@
+/* Style for chat container and messages */
+#chat-container {
+    position: fixed;
+    bottom: 0;
+    right: 0; 
+    margin: 10px;
+    width: 500px;
+    max-width: 100%;
+    resize: both; 
+    overflow: auto; 
+    max-width: 60%; 
+    max-height: 60%; 
+}
+
+#chat-box {
+    background-color: #fff;
+    border: 1px solid #d1d1d1;
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+#messages {
+    height: 200px;
+    overflow-y: auto;
+    padding: 10px;
+    background: #e1e1e1;
+    border-bottom: 2px solid #d1d1d1;
+}
+
+.message-bubble {
+    padding: 10px;
+    margin-left: auto;
+    border-radius: 20px;
+    background: #6b6a6a;
+    color: white;
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+/*blue background for bubbles*/
+.message-bubble-GPT {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 20px;
+    background: #007bff; 
+    color: white;
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+#chat-input {
+    border: 1px solid #d1d1d1;
+    padding: 10px;
+    width: calc(84% - 60px);
+    box-sizing: border-box;
+    border-radius: 15px;
+    transition: border 0.3s;
+}
+
+#chat-input:focus {
+    border-color: #007bff;
+}

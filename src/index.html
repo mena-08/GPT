@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>Earth Sphere WebGL</title>
+    <title>Conversacional GIS</title>
+    <link rel="stylesheet" href="./css/panes.css">
+    <link rel="stylesheet" href="./css/chat.css">
+    <link rel="stylesheet" href="./css/buttons.css">
     <link rel="stylesheet" href="./css/styles.css">
 </head>
+
 <body>
-    <!--Create our small chat box-->
     <div id="chat-container">
         <div id="chat-box">
             <div id="messages"></div>
@@ -16,13 +20,20 @@
         </div>
     </div>
     <div id="pane-maps-container"></div>
-    <div id="recording-container">
-        <button id="start-record-btn">Start Recording</button>
-        <button id="stop-record-btn">Stop Recording</button>
+    <div class="info-panel">
+        <!-- Refactor this so we can update it in real time -->
+        <h3 class="map-title-info">Average Temperature</h3>
+        <p class="map-info">Land surface temperature is how hot the Earth’s surface would feel to the touch. From a
+            satellite’s point of view, the “surface” is whatever it sees when it looks through the atmosphere to the
+            ground. It could be snow and ice, the grass on a lawn, the roof of a building, or the treetops in a forest.
+            Scientists monitor land surface temperature because the warmth rising off Earth’s landscapes influences (and
+            is influenced by) our world’s weather and climate patterns. Scientists want to monitor how increasing
+            atmospheric greenhouse gases affect land surface temperature, and how rising land surface temperatures
+            affect glaciers, ice sheets, permafrost, and the vegetation in Earth’s ecosystems.</p>
     </div>
-
 </body>
-<!--Import scripts-->   
+<!-- We only need to import the index js, as Parcel manages the rest -->
 <script type="module" src="./index.js"></script>
 </script>
+
 </html>

@@ -1,8 +1,24 @@
+/* Style for panes and informationa panel */
 #pane-maps-container{
     position: absolute; 
-    left: 150px; 
-    top: 120px; 
-    width: 75px; 
-    height: 75px; 
-    background-color: #666   
+    right: 3%;
+    top: 3%; 
+    width: 300px;
+}
+
+/* move this to its own css file */
+.info-panel {
+    background-color: hsl(230, 7%, 70%, 0.8); 
+    width: 200px;
+    border-radius: 10px;
+    padding: 10px;
+    position: absolute;
+    top: 3%; 
+    left: 3%;
+    z-index: 10;
+}
+
+.info-panel.hidden {
+    opacity: 0;
+    visibility: hidden;
 }

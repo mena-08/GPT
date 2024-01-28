@@ -1,4 +1,6 @@
 // actual values for audio files
+import {displayUserMessage} from '../modules/chatManager'
+import { displayGPTMessage } from '../modules/chatManager';
 let media_recorder;
 let audio_chunks = [];
 const record_btn = document.getElementById('record-btn');
@@ -14,16 +16,16 @@ function toggleRecordButton(isRecording) {
 async function startRecording() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        media_recorder = new media_recorder(stream);
+        media_recorder = new MediaRecorder(stream);
         media_recorder.ondataavailable = event => {
             audio_chunks.push(event.data);
         };
         media_recorder.onstop = () => {
-            const audio_blob = new Blob(audio_chunks, { type: 'audio/wav' });
-            const audioUrl = URL.createObjectURL(audio_blob);
-            const audio = new Audio(audioUrl);
+            const audio_blob = new Blob(audio_chunks, { type: 'audio/wav' });            
             //clear the chunks for the next recording
             audio_chunks = [];
+            //send the information to the whisperapi
+            sendAudioMessage(audio_blob);
         };
         media_recorder.start();
     } catch (error) {
@@ -48,3 +50,21 @@ record_btn.addEventListener('click', () => {
         stopRecording();
     }
 });
+
+function sendAudioMessage(audioBlob) {
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const formData = new FormData();
+formData.append('file', audioBlob, 'user_audio.wav');
+
+fetch("http://localhost:5000/audio", {
+    // we don't need to send the headers as its a formdata 
+    method: 'POST',
+    body: formData,
+})
+.then(response => response.json())
+.then(data => {
+    displayUserMessage(`Me: ${data.conversation[0].content}\n\n`);
+    displayGPTMessage(`Chat-GPT: ${data.conversation[1].content}\n\n`)
+})
+.catch(error => console.error('Error:', error));
+}
