@@ -24,8 +24,10 @@ def chat():
     :return: Returns a JSON response containing the reply from the chatbot and 
     the updated conversation.
     """
-    
     conversation = request.json['conversation']
+    if not conversation:
+        conversation = []
+    
     user_message = request.json['prompt']
     conversation.append({"role": "user", "content": user_message})
 
@@ -38,12 +40,12 @@ def chat():
             #custom model returned from the training >:]
             json={
                 # "model": "ft:gpt-3.5-turbo-1106:personal::8LWjN7Ee",
-                "model": "gpt-3.5-turbo-1106",
+                #"model": "gpt-3.5-turbo-1106",
+                "model": "gpt-4-turbo-preview",
                 "messages": conversation
             }
         )
         response.raise_for_status()
-        
         #extract the reply and append it to the conversation
         reply = response.json()['choices'][0]['message']['content']
         conversation.append({"role": "assistant", "content": reply})
