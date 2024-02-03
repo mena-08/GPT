@@ -1,5 +1,10 @@
+import { eventEmitter } from "./eventEmitter";
+
 let conversationHistory = [
-	{ "role": "system", "content": "Provide instructions for controlling a 3D scene, like 'move camera closer to the earth or a specific place' or 'move camera further from the earth." }
+	{
+		"role": "system", "content": "Provide useful information to the user about the Earth places, \
+	properties, facts and so on. You will be more like a friend explaining some topic to us in a friendly manner.\
+	It is important that the information will be short. I will ask you in different languages and you should identify which one is it, and answer in that language." }
 ];
 const input_field = document.getElementById('chat-input');
 const send_btn = document.getElementById('send-btn');
@@ -15,48 +20,51 @@ input_field.addEventListener('keypress', function (event) {
 	}
 });
 
-//create a function to send data to chatgpt and receive it, then process it as separate, as can be useful for any query we want or could use
+//send data to chatgpt and receive it, then process it as separate
 async function sendToAPI(_message, callback) {
-	if (_message) {
-		try {
-			const response = await fetch('http://localhost:5000/chat', {
-				method: 'POST',
-				headers: { 'Content-type': 'application/json', },
-				body: JSON.stringify({
-					prompt: _message,
-					// no need to update the conversation when asking for specific things, as of now (?)
-					conversation: ''
-				})
-			});
-			//retry at least once
-			if (!response.ok && response.status === 429) {
-				const retryDelay = Math.pow(2, retryCount) * 1000;
-				setTimeout(() => sendToAPI(_message, callback), retryDelay);
-				return;
-			}
+	if (!_message) return;
 
-			const data = await response.json();
-			//use any function as the callback for it
-			if (callback && typeof callback === 'function') {
-				callback(data);
-			}
-		} catch (error) {
-			console.error('Error:', error);
+	try {
+		const response = await fetch('http://localhost:5000/chat', {
+			method: 'POST',
+			headers: { 'Content-type': 'application/json', },
+			body: JSON.stringify({
+				prompt: _message,
+				conversation: conversationHistory
+			})
+		});
+
+		if (!response.ok && response.status === 429) {
+			//handle retry in case of rate limit errors or other network issues
+			console.error('API rate limit exceeded. Retrying...');
+			setTimeout(() => sendToAPI(_message, callback), 2000);
+			return;
 		}
+
+		const data = await response.json();
+		if (callback && typeof callback === 'function') {
+			callback(data);
+		}
+	} catch (error) {
+		console.error('Error:', error);
 	}
 }
 
-//Sends a user message to the API, receives a response, and updates the conversation history.
+let current_place = '';
+
+//sends a user message to the API, receives a response, and updates the conversation history.
 function sendMessage(message) {
 	if (message) {
+		const conversation_helper = 'Please provide me only a small and short paragraph of information from the prompt. \
+		You will not mentioned your are an AI or something note related to the things I asked, in a friendly manner, as if \
+		we were talking with a friend. I will ask you in different languages and you should identify which one is it, and answer in that language.';
 		displayUserMessage(`Me: ${message} \n\n`);
 		conversationHistory.push({ "role": "user", "content": message });
-
 		fetch('http://localhost:5000/chat', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json', },
 			body: JSON.stringify({
-				prompt: message,
+				prompt: (message + conversation_helper),
 				conversation: conversationHistory
 			})
 		}).then(response => {
@@ -69,10 +77,29 @@ function sendMessage(message) {
 			return response.json();
 		}).then(data => {
 			displayGPTMessage(`ChatGPT: ${data.reply}\n`);
+			let x = '. Please give me the geojson text format only of the place mentioned in the prompt, the name of the place and nothing more. \
+			Be as precise as possible, using at least 6 decimals on the answer. If the answer contains several places, use \
+			the GeoJSON properties like the multipoints array, to include them or surrounding them if its an area that has been asked \
+			The answer must have the following example structure : \
+			"{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-68.2532,-20.1338,3656]},\"properties\":{\"name\":\"Salar de Uyuni, Bolivia\"}}"\
+			If we are still talking about the same place or have not switched to another one, you will return only an empty geoJSON format text.\
+			I will ask you in different languages and you should identify which one is it, and answer in that language.';
+
+			//set a small delay so the async function have the time to have the data
+			setTimeout(() => {
+				sendToAPI(data.reply + x, (follow_up_data) => {
+					const geojson = JSON.parse(follow_up_data.reply);
+					const mentioned_place = geojson.properties.name;
+					if (mentioned_place && mentioned_place !== current_place) {
+						current_place = mentioned_place;
+						eventEmitter.emit('makeTransition', geojson);
+					}
+				})
+			}, 650);
+
 			//update conversation history
 			conversationHistory = data.conversation;
 		}).catch(error => console.error('Error:', error));
-
 		input_field.value = '';
 	}
 }
@@ -95,4 +122,5 @@ function displayGPTMessage(message) {
 
 export { displayUserMessage };
 export { displayGPTMessage };
-export { sendToAPI }
+export { sendToAPI };
+export { conversationHistory }

@@ -26,7 +26,7 @@ const map_categories = {
     Atmosphere: ['Aerosol Optical Thickness', 'Aerosol Particles Radius', 'Cloud Fraction', 'CO2-2020', 'CO2-2023', 'Rainfall', 'Solar Insolation','Water Vapor'],
     Energy: ['Energy Albedo', 'Average Temperature DAY', 'Average Temperature NIGHT'],
     Life: ['Chlorophyll Concentration', 'Land Cover','Leaf Area', 'Topography'],
-    Terrain: ['Earth Texture']
+    //Terrain: ['Earth Texture']
 };
 
 //Create the UI buttons with map and category names
@@ -40,7 +40,7 @@ Object.keys(map_categories).forEach(category => {
         button.on('click', () => {
             handleButtonClick(mapName, index, category);
             document.getElementById('map-title-info').innerHTML = mapName;
-            sendToAPI(`Please give me information about a map of ${mapName} from the Earth? It belongs to the category of ${category} \n Please answer in a short paragraph and only the information relevant to the map. The information is meant for kids of 8 years`, updateHTMLElement);
+            sendToAPI(`Please give me information about a map of ${mapName} from the Earth? It belongs to the category of ${category} \n Please answer in a short paragraph and only the information relevant to the map. Please exclude any introduction words like, "sure!", "certainly!", etc. The information is meant for kids of 8 years. Also, don't include the quote characters.`, updateHTMLElement);
         });
     });
 });
@@ -78,7 +78,6 @@ function handleButtonClick(label, index, category) {
             return;
     }
     eventEmitter.emit('textureChange', selectedMap);
-    eventEmitter.emit('change', selectedMap);
 };
 
 //a bit hardcoded for the reply from the gpt 

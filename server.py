@@ -41,7 +41,7 @@ def chat():
             json={
                 # "model": "ft:gpt-3.5-turbo-1106:personal::8LWjN7Ee",
                 #"model": "gpt-3.5-turbo-1106",
-                "model": "gpt-4-turbo-preview",
+                "model": "ft:gpt-3.5-turbo-1106:personal::8mUK7i2U",
                 "messages": conversation
             }
         )
@@ -80,22 +80,22 @@ def audio():
         
         #TEST THE API WITH ONE EXAMPLE FROM THE OPENAI COOKBOOK
         ###################################
-        from pdb import set_trace; set_trace()
-        up_first_remote_filepath = "https://cdn.openai.com/API/examples/data/upfirstpodcastchunkthree.wav"
-        up_first_filepath = "upfirstpodcastchunkthree.wav"
-        urllib.request.urlretrieve(up_first_remote_filepath, up_first_filepath)
-        with open(up_first_filepath, 'rb') as f:
-            file_content = f.read()
+        #from pdb import set_trace; set_trace()
+        # up_first_remote_filepath = "https://cdn.openai.com/API/examples/data/upfirstpodcastchunkthree.wav"
+        # up_first_filepath = "upfirstpodcastchunkthree.wav"
+        # urllib.request.urlretrieve(up_first_remote_filepath, up_first_filepath)
+        # with open(up_first_filepath, 'rb') as f:
+        #     file_content = f.read()
 
-        # Prepare the files dictionary
-        files = {
-            'file': ('upfirstpodcastchunkthree.wav', file_content, 'audio/wav'),
-        }
-        response = requests.post("https://api.openai.com/v1/audio/transcriptions", headers=headers, files=files, data=data)
-        ###################################
+        # # Prepare the files dictionary
+        # files = {
+        #     'file': ('upfirstpodcastchunkthree.wav', file_content, 'audio/wav'),
+        # }
+        # response = requests.post("https://api.openai.com/v1/audio/transcriptions", headers=headers, files=files, data=data)
+        # ###################################
 
         #!!!! UNCOMMENT THIS ONE FOR THE NORMAL VOICE RECORDING
-        #response = requests.post("https://api.openai.com/v1/audio/transcriptions", headers=headers, files=files, data=data)
+        response = requests.post("https://api.openai.com/v1/audio/transcriptions", headers=headers, files=files, data=data)
         if response.status_code != 200:
             return jsonify({"error": "Error from Whisper API", "details": response.text}), response.status_code
         

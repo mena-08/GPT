@@ -1,14 +1,18 @@
 import '../modules/gui';
 import * as THREE from 'three';
+import * as TWEEN from '@tweenjs/tween.js';
 
-import TERRAIN_MAP from '../images/10kearth.jpg';
+import TERRAIN_MAP from '../images/16kBaseMap.jpg';
 import ENVMAP from '../images/envMapMilkyWay.jpg';
-import BUMP_MAP from '../images/10kearthbump.jpg';
-import SPECULAR_MAP from '../images/10kearthspecular.jpg';
+import BUMP_MAP from '../images/16kElevationMap.jpg';
+import SPECULAR_MAP from '../images/16kWaterMap.png';
+import CLOUDS_MAP from '../images/8kFairCloudsMap2.png'
+import BOUNDARIES from '../images/16kBoundariesMap2.png';
 
-import { EarthSphereClass } from './object';
 import { WGS84ToECEF } from './utilities';
+import { EarthSphereClass } from './object';
 import { eventEmitter } from './eventEmitter';
+import { moveCameraToTarget } from './utilities';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 const scene = new THREE.Scene();
@@ -21,6 +25,9 @@ document.body.appendChild(renderer.domElement);
 
 const earth_sphere = new EarthSphereClass(TERRAIN_MAP, BUMP_MAP, SPECULAR_MAP);
 const controls = new OrbitControls(camera, renderer.domElement);
+controls.enablePan = false;
+controls.minDistance = 5.7;
+controls.maxDistance = 100;
 
 //lighting
 const directional_light = new THREE.DirectionalLight(0xffffff, 0.2);
@@ -37,71 +44,69 @@ const background = new THREE.Mesh(sky_sphere, background_material);
 background.material.side = THREE.BackSide;
 background.rotation.x = - (90 - 60) * (Math.PI / 180);
 
-// ONLY FOR TESTING COORD SYSTEM
-// ----------------------------
+//clouds
+const clouds = new THREE.TextureLoader().load(CLOUDS_MAP);
+const clouds_material = new THREE.MeshBasicMaterial({
+    map: clouds,
+    side: THREE.DoubleSide,
+    transparent: true,
+    alphaTest: 0.1
+});
+const clouds_geometry = new THREE.SphereGeometry(5.05, 64, 64);
+const clouds_sphere = new THREE.Mesh(clouds_geometry, clouds_material);
 
-//- RED X
-const geox = new THREE.SphereGeometry(0.4, 32, 32);
-const matx = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-const testx = new THREE.Mesh(geox, matx);
-testx.position.x = 1;
-testx.position.y = 0;
-testx.position.z = 0;
-
-//- GREEN Y
-const geoy = new THREE.SphereGeometry(0.4, 32, 32);
-const maty = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const testy = new THREE.Mesh(geoy, maty);
-testy.position.x = 0;
-testy.position.y = 1;
-testy.position.z = 0;
-
-//- BLUE Z
-//const geoz = new THREE.SphereGeometry( 0.4, 32, 32 ); 
-const matz = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-const testz = new THREE.Mesh(geoy, matz);
-testz.position.x = 0;
-testz.position.y = 0;
-testz.position.z = 1;
-
-const y = WGS84ToECEF(0, 0, 0);
-const georoot = new THREE.SphereGeometry(0.1, 32, 32);
-const matroot = new THREE.MeshBasicMaterial({ color: 0xffffff });
-const testroot = new THREE.Mesh(georoot, matroot);
-testroot.position.x = y.x;
-testroot.position.y = y.y;
-testroot.position.z = y.z;
-scene.add(testx);
-scene.add(testy);
-scene.add(testz);
-scene.add(testroot);
-// ----------------------------
-// ONLY FOR TESTING COORD SYSTEM
+//boundaries
+const boundaries = new THREE.TextureLoader().load(BOUNDARIES);
+const boundaries_material = new THREE.MeshBasicMaterial({
+    map: boundaries,
+    side: THREE.DoubleSide,
+    transparent: true,
+    alphaTest: 0.1
+});
+const boundaries_geometry = new THREE.SphereGeometry(5.001, 64, 64);
+const boundaries_sphere = new THREE.Mesh(boundaries_geometry, boundaries_material);
 
 scene.add(background);
 scene.add(earth_sphere.getSphere());
 scene.add(directional_light);
 scene.add(ambient_light);
+scene.add(clouds_sphere);
+scene.add(boundaries_sphere);
 
-// ONLY FOR TESTING WGS84 COORDS
-// ----------------------------
-const x = WGS84ToECEF(86.924831, 27.987868, 0);
-const geo = new THREE.SphereGeometry(0.05, 32, 32);
-const mat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-const test = new THREE.Mesh(geo, mat);
-test.position.x = x.x;
-test.position.y = x.y;
-test.position.z = x.z;
-scene.add(test);
-// ----------------------------
-// ONLY FOR TESTING WGS84 COORDS
 
 eventEmitter.on('textureChange', (newTextureURL) => {
     earth_sphere.updateTexture(newTextureURL);
 });
 
-function render() {
+eventEmitter.on('makeTransition', (coordinatesJSON) => {
+    const geometryType = coordinatesJSON.geometry.type;
+    const coordinates = coordinatesJSON.geometry.coordinates;
+
+    if (geometryType === 'Point') {
+        console.log(`Point Coordinates: ${coordinates}`);
+        const point = WGS84ToECEF(coordinates[0], coordinates[1], 0);
+        moveCameraToTarget(new THREE.Vector3(point.x, point.y, point.z), camera);
+        const geo = new THREE.SphereGeometry(0.005, 32, 32);
+        const mat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const test = new THREE.Mesh(geo, mat);
+        test.position.x = point.x;
+        test.position.y = point.y;
+        test.position.z = point.z;
+        scene.add(test);
+
+    } else if (geometryType === 'Polygon') {
+        console.log(`Polygon Coordinates: ${coordinates}`);
+        //return coordinates; // Returns an array of arrays of coordinates
+    } else {
+        console.error('Unsupported geometry type');
+        //return null;
+    }
+});
+
+function render(time) {
     requestAnimationFrame(render);
+    TWEEN.update(time);
+    clouds_sphere.rotation.y += 0.00013;
     controls.update();
     renderer.render(scene, camera);
 }

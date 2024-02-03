@@ -4,7 +4,7 @@ import './modules/chatManager';
 import './modules/render';
 import './modules/audioManager';
 // import './modules/gui';
-import './modules/infoManager';
+// import './modules/infoManager';
 import './modules/utilities';
 
 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
