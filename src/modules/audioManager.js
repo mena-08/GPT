@@ -62,7 +62,7 @@ async function sendAudioMessage(audioBlob) {
     formData.append('file', audioBlob, 'user_audio.wav');
 
     try {
-        const response = await fetch("http://ec2-13-49-246-213.eu-north-1.compute.amazonaws.com:1234/audio", {
+        const response = await fetch("http://ec2-13-49-246-213.eu-north-1.compute.amazonaws.com:5000/audio", {
             method: 'POST',
             body: formData,
         });

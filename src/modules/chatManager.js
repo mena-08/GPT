@@ -25,7 +25,7 @@ async function sendToAPI(_message, callback) {
 	if (!_message) return;
 
 	try {
-		const response = await fetch('http://ec2-13-49-246-213.eu-north-1.compute.amazonaws.com:1234/chat', {
+		const response = await fetch('http://ec2-13-49-246-213.eu-north-1.compute.amazonaws.com:5000/chat', {
 			method: 'POST',
 			headers: { 'Content-type': 'application/json', },
 			body: JSON.stringify({
@@ -61,7 +61,7 @@ function sendMessage(message) {
 		displayUserMessage(`Me: ${message} \n\n`);
 		conversationHistory.push({ "role": "user", "content": message });
 		// fetch('http://localhost:5000/chat', {
-			fetch('http://ec2-13-49-246-213.eu-north-1.compute.amazonaws.com:1234/chat',{
+		fetch('http://ec2-13-49-246-213.eu-north-1.compute.amazonaws.com:5000/chat',{
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json', },
 			body: JSON.stringify({
