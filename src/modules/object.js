@@ -29,9 +29,9 @@ export class EarthSphereClass {
         const material = new THREE.MeshPhongMaterial({
             map: texture,
             bumpMap: bump_map,
-            bumpScale: 0.05,
+            bumpScale: 0.2,
             specularMap: specular_map,
-            specular: new THREE.Color('white')
+            specular: new THREE.Color('gray')
         });
 
         return new THREE.Mesh(geometry, material);

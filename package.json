@@ -12,6 +12,7 @@
   "license": "ISC",
   "devDependencies": {
     "@parcel/resolver-glob": "^2.11.0",
+    "@parcel/transformer-inline-string": "^2.11.0",
     "parcel": "^2.11.0",
     "parcel-plugin-static-files-copy": "^2.6.0"
   },

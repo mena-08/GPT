@@ -10,5 +10,5 @@ import { eventEmitter } from './eventEmitter';
 //TODO: this can help in the meantime but it can be further improved for any loading gif whatever something appealing
 
 eventEmitter.on('change', () => {
-    document.getElementById('map-info').innerHTML = 'Loading map information...';
+    //document.getElementById('map-info').innerHTML = 'Loading map information...';
 });

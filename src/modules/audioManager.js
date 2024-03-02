@@ -1,9 +1,7 @@
 // actual values for audio files
-import { displayUserMessage } from '../modules/chatManager'
-import { displayGPTMessage } from '../modules/chatManager';
-import { sendToAPI } from '../modules/chatManager';
+import { displayUserMessage, displayGPTMessage, sendToAPI, conversationHistory, askForMap, fetchMapImage } from '../modules/chatManager';
 import { eventEmitter } from './eventEmitter';
-import { conversationHistory } from '../modules/chatManager';
+import help_map_prompts from "bundle-text:../help_map_prompts.txt"
 
 let media_recorder;
 let audio_chunks = [];
@@ -62,7 +60,7 @@ async function sendAudioMessage(audioBlob) {
     formData.append('file', audioBlob, 'user_audio.wav');
 
     try {
-        const response = await fetch("http://ec2-13-49-246-213.eu-north-1.compute.amazonaws.com:5000/audio", {
+        const response = await fetch("http://localhost:5000/audio", {
             method: 'POST',
             body: formData,
         });
@@ -78,13 +76,14 @@ async function sendAudioMessage(audioBlob) {
         displayUserMessage(`Me: ${data.conversation[0].content}\n\n`);
         displayGPTMessage(`Chat-GPT: ${data.conversation[1].content}\n\n`);
 
-        const conversation_helper = '. Please give me the geojson text format only of the place mentioned in the prompt, the name of the place and nothing more. \
-        Be as precise as possible, using at least 6 decimals on the answer. If the answer contains several places, use \
-        the GeoJSON properties like the multipoints array, to include them or surrounding them if its an area that has been asked \
-        The answer must have the following example structure : \
-        "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-68.2532,-20.1338,3656]},\"properties\":{\"name\":\"Salar de Uyuni, Bolivia\"}}"\
-        If we are still talking about the same place or have not switched to another one, you will return only an empty geoJSON format text.\
-        I will ask you in different languages and you should identify which one is it, and answer in that language.';
+        const conversation_helper = 'Please give me the geojson text format only of the place mentioned in the prompt, the name of the place and nothing more' +
+        'Be as precise as possible, using at least 6 decimals on the answer. If the answer contains several places, use' +
+        ' the GeoJSON properties like the multipoints array, to include them or surrounding them if its an area that has been asked. ' +
+        'The answer must have the following example structure : ' +
+        '{"type":"Feature","geometry":{"type":"Point","coordinates":[-68.2532,-20.1338,3656]},"properties":{"name":"Salar de Uyuni, Bolivia"}}' +
+        ' If you notice that we are not mentioning any place, return an empty json please.' +
+        ' If we are still talking about the same place or have not switched to another one, you will return only an empty geoJSON format text.' +
+        ' Avoid words like "certainly" or the very formal ones, remember we are interacting with a friends, you can also use friendly slang to answer';
         sendToAPI(data.conversation[1].content + conversation_helper, (follow_up_data) => {
             const geojson = JSON.parse(follow_up_data.reply);
             const mentioned_place = geojson.properties.name;
@@ -93,6 +92,18 @@ async function sendAudioMessage(audioBlob) {
                 eventEmitter.emit('makeTransition', geojson);
             }
         });
+
+        let p = "You will be feed with a query about Earth's environmental features or phenomena, such as ice coverage, snow depth, atmospheric composition (like ozone or nitrogen levels), " +
+            "surface temperatures, or precipitation patterns, your task is to identify and select the most appropriate map from the provided list. The list contains names of satellite imagery maps, " +
+            "each representing different data about Earth's environment. " +
+            "Your response should be the exact name of the one map that best represents the information sought in the query. I only need that you return the name of the map and nothing else."
+        setTimeout(() => {
+            askForMap((p + data.reply + help_map_prompts), (follow_up) => {
+                if (follow_up.reply) {
+                    fetchMapImage(follow_up.reply);
+                }
+            })
+        }, 70);
 
         // Update conversation history
         conversationHistory.push({ "role": "system", "content": data.conversation[0].content });
