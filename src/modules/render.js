@@ -13,6 +13,7 @@ import { WGS84ToECEF, moveCameraToTarget } from './utilities';
 import { EarthSphereClass } from './object';
 import { eventEmitter } from './eventEmitter';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { createTextSprite } from './textRenderer';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 3000);
@@ -107,6 +108,10 @@ eventEmitter.on('makeTransition', (coordinatesJSON) => {
 });
 
 function render(time) {
+    const textSprite = createTextSprite('Hello World!');
+    textSprite.position.set(6, 6, 6);
+    scene.add(textSprite);
+
     requestAnimationFrame(render);
     TWEEN.update(time);
     // clouds_sphere.rotation.y += 0.00013;

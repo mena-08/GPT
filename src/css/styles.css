@@ -28,3 +28,28 @@ html, body {
     background: #007bff;
     border-radius: 4px;
 }
+
+#legendContainer {
+    position: absolute;
+    left: 40px;
+    bottom: 40px;
+    background: black; 
+    border-radius: 15px; 
+    padding: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); 
+    z-index: 1000; 
+}
+
+#legendCanvas {
+    display: block;
+    max-width: 100%;
+    border-radius: 5px; 
+    margin-bottom: 5px; 
+}
+
+#legendText {
+    text-align: center;
+    font-size: 14px;
+    color: white;
+    margin-top: 10px;
+}
