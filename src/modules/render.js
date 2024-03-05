@@ -2,7 +2,8 @@
 import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js';
 
-import TERRAIN_MAP from '../images/16kBaseMap.jpg';
+// import TERRAIN_MAP from '../images/16kBaseMap.jpg';
+import TERRAIN_MAP from '../images/life/life-Topography.png';
 import ENVMAP from '../images/envMapMilkyWay.jpg';
 import BUMP_MAP from '../images/16kElevationMap.jpg';
 import SPECULAR_MAP from '../images/16kWaterMap.png';
@@ -17,7 +18,7 @@ import { createTextSprite } from './textRenderer';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 3000);
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({ antialias: true});
 camera.position.z = 20;
 
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -28,6 +29,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enablePan = false;
 controls.minDistance = 5.6;
 controls.maxDistance = 100;
+
 
 //lighting
 const directional_light = new THREE.DirectionalLight(0xffffff, 0.2);
@@ -103,7 +105,6 @@ eventEmitter.on('makeTransition', (coordinatesJSON) => {
         //return coordinates; // Returns an array of arrays of coordinates
     } else {
         console.error('Unsupported geometry type');
-        //return null;
     }
 });
 
@@ -112,12 +113,15 @@ function render(time) {
     textSprite.position.set(6, 6, 6);
     scene.add(textSprite);
 
-    requestAnimationFrame(render);
+    //requestAnimationFrame(render);
     TWEEN.update(time);
-    // clouds_sphere.rotation.y += 0.00013;
     controls.update();
     renderer.render(scene, camera);
 }
 
+function animate(){
+    renderer.setAnimationLoop(render);
+}
+export {animate};
+
 //https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?LAYERS=AIRS_L3_Clear_Sky_Outgoing_Longwave_Radiation_Daily_Day&REQUEST=GetMap&SERVICE=WMS&FORMAT=image/png&WIDTH=16200&HEIGHT=8100&VERSION=1.1.1&SRS=epsg:4326&BBOX=-180,-90,180,90&TRANSPARENT=TRUE
-render();

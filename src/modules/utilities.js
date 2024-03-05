@@ -41,3 +41,19 @@ function moveCameraToTarget(target_position, camera, duration = 3000) {
 
 export { moveCameraToTarget };
 export { WGS84ToECEF };
+
+// function setupBuffers(gl, program) {
+//     // Set up the vertex buffer
+//     const positionBuffer = gl.createBuffer();
+//     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+//     const positions = [
+//         -1, -1,
+//         1, -1,
+//         -1, 1,
+//         1, 0.5,
+//     ];
+//     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+//     const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
+//     gl.enableVertexAttribArray(positionAttributeLocation);
+//     gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+// }

@@ -11,6 +11,8 @@
 </head>
 
 <body>
+    <canvas id="webgl-canvas"></canvas>
+
     <div id="chat-container">
         <div id="chat-box">
             <div id="messages"></div>
@@ -32,11 +34,11 @@
         <canvas id="legendCanvas" width="400" height="50"></canvas>
         <div id="legendText">---</div>
     </div>
-    
+
 
 </body>
 <!-- We only need to import the index js, as Parcel manages the rest -->
-<script type="module" src="./index.js"></script>
-</script>
+<!-- <script type="module" src="./index.js"></script> -->
+<script type="module" src="./modules/renderWebGL.js"></script>
 
 </html>

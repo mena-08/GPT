@@ -1,14 +1,18 @@
-//import all the libraries/images needed, as Parcel needs to 
-// explicitly import them to use them. Helps also with the organization of it
+//import all the libraries/images needed, as Parcel needs to know about them
 import './modules/chatManager';
-import './modules/render';
-import './modules/audioManager';
-// import './modules/gui';
-// import './modules/infoManager';
+import { animate, render } from './modules/render';
+//import './modules/audioManager';
 import './modules/utilities';
 
 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     alert("Your browser does not support audio recording.");
+}
+if('xr' in navigator){
+    alert('WebXR is supported');
+    animate();
+    initializeXRApp();
+}else{
+    alert('WebXR is not supported');
 }
 
 // https://en.wikipedia.org/wiki/Web_Map_Service
