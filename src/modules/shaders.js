@@ -2,17 +2,28 @@
 
 const vertexShaderSource = `
     attribute vec3 a_position;
+    attribute vec2 a_texCoord; // New attribute for texture coordinates
+
+    varying vec2 v_texCoord; // For passing the texture coord to the fragment shader
+
     uniform mat4 u_viewMatrix;
     uniform mat4 u_projectionMatrix;
+
     void main() {
         gl_Position = u_projectionMatrix * u_viewMatrix * vec4(a_position, 1.0);
+        v_texCoord = a_texCoord; // Pass texture coord to the fragment shader
     }
+
 `;
 
 const fragmentShaderSource = `
     precision mediump float;
+
+    varying vec2 v_texCoord; // Received from the vertex shader
+    uniform sampler2D u_texture; // The texture sampler
+
     void main() {
-        gl_FragColor = vec4(1, 0, 0, 1);
+        gl_FragColor = texture2D(u_texture, v_texCoord);
     }
 `;
 function initShaders(gl) {

@@ -4,6 +4,7 @@ class Sphere {
         this.segments = segments;
         this.vertices = [];
         this.indices = [];
+        this.texCoords = [];
         this.generateGeometry();
     }
 
@@ -36,6 +37,11 @@ class Sphere {
                 vertices[vertexIndex++] = y;
                 vertices[vertexIndex++] = z;
 
+                //texture coordinates
+                const u = j / this.segments;
+                const v = i / this.segments;
+                this.texCoords.push(u, v);
+
                 if (i < this.segments && j < this.segments) {
                     const a = i * (this.segments + 1) + j;
                     const b = a + this.segments + 1;
@@ -53,6 +59,7 @@ class Sphere {
 
         this.vertices = vertices;
         this.indices = indices;
+        this.texCoords = new Float32Array(this.texCoords);
     }
 }
 export { Sphere };

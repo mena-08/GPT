@@ -2,6 +2,11 @@ import camera from "./camera";
 import { initShaders } from "./shaders";
 import { updateCameraPosition,updateCameraOrbit } from "./controllers";
 import { Sphere } from "./sphere";
+import { loadTexture } from "./textures";
+// Import the texture image
+import starfieldTexture from '../images/16kBaseMap.jpg';
+
+let sphereBuffers = null;
 
 function init() {
     const canvas = document.getElementById('webgl-canvas');
@@ -28,9 +33,17 @@ function setup(canvas) {
     gl.attachShader(program, fragmentShader);
     gl.linkProgram(program);
     gl.useProgram(program);
+
+    sphereBuffers = initSphereBuffers(gl, new Sphere(1, 32));
     //setupBuffers(gl, program);
 
-    camera.position = [0, 0, 10];
+    camera.position = [0, 0, 1.5];
+
+    //load a texture
+    const texture = loadTexture(gl, starfieldTexture);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.uniform1i(gl.getUniformLocation(program, 'u_texture'), 0);
 
     let lastTime = 0;
     function animate(now) {
@@ -58,11 +71,16 @@ function initSphereBuffers(gl, sphere) {
     const indexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, sphere.indices, gl.STATIC_DRAW);
+    
+    const textureCoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, sphere.texCoords, gl.STATIC_DRAW);
 
     return {
         vertexBuffer,
         indexBuffer,
-        vertexCount: sphere.indices.length
+        vertexCount: sphere.indices.length,
+        textureCoordBuffer
     };
 }
 
@@ -78,7 +96,7 @@ function render(gl, camera, program) {
     gl.uniformMatrix4fv(viewMatrixLocation, false, viewMatrix);
     gl.uniformMatrix4fv(projectionMatrixLocation, false, projectionMatrix);
     
-    const mySphere = new Sphere(1, 32);
+    const mySphere = new Sphere(1, 128);
     const sphereBuffers = initSphereBuffers(gl, mySphere);
     drawSphere(gl, program, sphereBuffers);
 }
@@ -95,6 +113,12 @@ function drawSphere(gl, program, sphereBuffers) {
 
     // Bind the sphere index buffer
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sphereBuffers.indexBuffer);
+
+    // Bind the sphere texture coordinate buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, sphereBuffers.textureCoordBuffer);
+    const textureCoordAttributeLocation = gl.getAttribLocation(program, 'a_texCoord');
+    gl.vertexAttribPointer(textureCoordAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(textureCoordAttributeLocation);
 
     // Set uniforms
     gl.uniformMatrix4fv(projectionMatrixLocation, false, camera.getProjectionMatrix());

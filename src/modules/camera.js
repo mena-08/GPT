@@ -5,7 +5,7 @@ class Camera {
         this.position = [0, 0, 0];
         this.target = [0, 0, -1];
         this.up = [0, 1, 0];
-        this.fov = 45;
+        this.fov = 90;
         this.aspectRatio = 1;
         this.near = 0.1;
         this.far = 1000;
