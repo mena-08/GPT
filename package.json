@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "parcel src/index.html",
+    "start": "cross-env NODE_EXTRA_CA_CERTS=./server.cert parcel src/index.html --",
     "build": "parcel build src/index.html"
   },
   "keywords": [],
@@ -13,11 +13,13 @@
   "devDependencies": {
     "@parcel/resolver-glob": "^2.11.0",
     "@parcel/transformer-inline-string": "^2.11.0",
+    "cross-env": "^7.0.3",
     "parcel": "^2.11.0",
     "parcel-plugin-static-files-copy": "^2.6.0"
   },
   "dependencies": {
     "@tweenjs/tween.js": "^23.1.1",
+    "gl-matrix": "^3.4.3",
     "three": "^0.160.0",
     "tweakpane": "^4.0.3"
   },

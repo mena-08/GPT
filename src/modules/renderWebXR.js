@@ -1,9 +1,11 @@
-import {gl, earthShaderProgram, skyboxProgram, renderSkybox, renderEarth, earthTexture, starfieldTexture } from './renderWebGL';
+import {gl, earthShaderProgram, renderSkybox, renderEarth} from './renderWebGL';
 
+let xrSession = null;
+let xrReferenceSpace = null;
 
 export async function onEnterXRClicked() {
     try {
-        const session = await navigator.xr.requestSession('immersive-ar', {
+        const session = await navigator.xr.requestSession('immersive-vr', {
             optionalFeatures: ["local"],
         });
         
@@ -13,17 +15,13 @@ export async function onEnterXRClicked() {
     }
 }
 
-let xrSession = null;
-let xrReferenceSpace = null;
 
 function onSessionStarted(session) {
-    // Store the session for use in rendering and other functions
+    //store the session for use in rendering and other functions
     xrSession = session;
 
-    // Create an XRWebGLLayer using the XR Session and your WebGL context
-    let glCanvas = document.createElement('canvas');
-    //gl = glCanvas.getContext('webgl', { xrCompatible: true });
-    let xrLayer = new XRWebGLLayer(session, gl);
+    //create an XRWebGLLayer using the XR Session and your WebGL context
+    let xrLayer = new XRWebGLLayer(session, gl, {framebufferScaleFactor: 0.8});
 
     session.updateRenderState({ baseLayer: xrLayer });
 
@@ -37,32 +35,34 @@ function onSessionStarted(session) {
     });
 }
 
-
 function onSessionEnded(event) {
     xrSession.removeEventListener('end', onSessionEnded);
     xrSession = null;
     console.log('Session ended');
-    // Clean up any session-specific resources here
 }
 
 function onXRFrame(time, frame) {
     let session = frame.session;
+    session.requestAnimationFrame(onXRFrame);
     let pose = frame.getViewerPose(xrReferenceSpace);
-    
+
     if (pose) {
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, xrSession.renderState.baseLayer.framebuffer);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
         for (let view of pose.views) {
+
             const viewport = session.renderState.baseLayer.getViewport(view);
             gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
             
             const viewMatrix = view.transform.inverse.matrix;
             const projectionMatrix = view.projectionMatrix;
-            
-            // Here, pass the XR view's matrices instead of the camera's
+
             //renderSkybox(gl,viewMatrix, projectionMatrix,skyboxProgram);
             renderEarth(gl, viewMatrix, projectionMatrix, earthShaderProgram);
         }
     }
     
-    session.requestAnimationFrame(onXRFrame);
 }
 

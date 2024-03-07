@@ -3,8 +3,8 @@ import { mat4 } from "gl-matrix";
 import { Sphere } from "./sphere";
 import { loadTexture } from "./textures";
 import { shaderProgramInit } from "./shaders";
-import earthTexturePath from '../images/8kearth.jpg';
-import starfieldTexturePath from '../images/starfield4k.png';
+import earthTexturePath from '../images/unused/8kearth.jpg';
+import starfieldTexturePath from '../images/unused/starfield4k.png';
 import { updateCameraPosition, updateCameraOrbit } from "./controllers";
 
 //global variables for the spheres
@@ -32,9 +32,9 @@ const earthVertexShaderSource = `
         v_texCoord = a_texCoord; // Pass texture coord to the fragment shader
 
         //apply lightning effect
-        highp vec3 ambientLight = vec3(0.5, 0.5, 0.5);
-        highp vec3 directionalLightColor = vec3(1, 1, 1);
-        highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+        mediump vec3 ambientLight = vec3(0.5, 0.5, 0.5);
+        mediump vec3 directionalLightColor = vec3(1, 1, 1);
+        mediump vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
 
         highp vec4 transformedNormal = u_normalMatrix * vec4(a_normal, 1.0);
 
@@ -67,7 +67,7 @@ const skyboxVertexShaderSource = `
     uniform mat4 u_viewMatrix;
     uniform mat4 u_projectionMatrix;
 
-    varying highp vec2 v_texCoord;
+    varying mediump vec2 v_texCoord;
 
     void main() {
         gl_Position = u_projectionMatrix * u_viewMatrix * vec4(a_position, 1.0);
@@ -167,11 +167,11 @@ function initSphereBuffers(gl, sphere) {
 
 async function initTextures(gl) {
     earthTexture = await loadTexture(gl, earthTexturePath);
-    starfieldTexture = await loadTexture(gl, starfieldTexturePath);
+    //starfieldTexture = await loadTexture(gl, starfieldTexturePath);
 }
 
 function setupSphereRendering(gl) {
-    const earthSphere = new Sphere(1, 128);
+    const earthSphere = new Sphere(1, 32);
     earthSphereBuffers = initSphereBuffers(gl, earthSphere);
 
     const skyboxSphere = new Sphere(1000, 32, true);

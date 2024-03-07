@@ -3,12 +3,12 @@ import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js';
 
 // import TERRAIN_MAP from '../images/16kBaseMap.jpg';
-import TERRAIN_MAP from '../images/life/life-Topography.png';
-import ENVMAP from '../images/envMapMilkyWay.jpg';
-import BUMP_MAP from '../images/16kElevationMap.jpg';
-import SPECULAR_MAP from '../images/16kWaterMap.png';
-import CLOUDS_MAP from '../images/8kFairCloudsMap2.png'
-import BOUNDARIES from '../images/16kBoundariesMap2.png';
+// import TERRAIN_MAP from '../images/life/life-Topography.png';
+// import ENVMAP from '../images/envMapMilkyWay.jpg';
+// import BUMP_MAP from '../images/16kElevationMap.jpg';
+// import SPECULAR_MAP from '../images/16kWaterMap.png';
+// import CLOUDS_MAP from '../images/8kFairCloudsMap2.png'
+// import BOUNDARIES from '../images/16kBoundariesMap2.png';
 
 import { WGS84ToECEF, moveCameraToTarget } from './utilities';
 import { EarthSphereClass } from './object';
