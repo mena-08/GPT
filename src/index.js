@@ -3,17 +3,28 @@ import './modules/chatManager';
 import { animate, render } from './modules/render';
 //import './modules/audioManager';
 import './modules/utilities';
+import {init} from './modules/renderWebGL';
+import {onEnterXRClicked} from './modules/renderWebXR';
 
 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     alert("Your browser does not support audio recording.");
 }
-if('xr' in navigator){
-    alert('WebXR is supported');
-    animate();
-    initializeXRApp();
-}else{
+if ('xr' in navigator) {
+    init();
+    navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
+        if (supported) {
+            const button = document.getElementById('xr-button'); // Change 'xr-button' to 'button'
+            button.innerText = 'Enter VR'; 
+            //document.body.appendChild(button); 
+            button.addEventListener('click', onEnterXRClicked);
+        } else {
+            alert('Immersive VR is not supported');
+        }
+    });
+} else {
     alert('WebXR is not supported');
 }
+
 
 // https://en.wikipedia.org/wiki/Web_Map_Service
 

@@ -1,10 +1,12 @@
 class Sphere {
-    constructor(radius, segments) {
+    constructor(radius, segments, isInverted = true) {
         this.radius = radius;
         this.segments = segments;
         this.vertices = [];
         this.indices = [];
         this.texCoords = [];
+        this.normals = [];
+        this.isInverted = isInverted;
         this.generateGeometry();
     }
 
@@ -38,21 +40,38 @@ class Sphere {
                 vertices[vertexIndex++] = z;
 
                 //texture coordinates
-                const u = j / this.segments;
-                const v = i / this.segments;
+                let u = j / this.segments;
+                let v = i / this.segments;
+                u = 1.0 - u;
+
                 this.texCoords.push(u, v);
+
+                //normals
+                const length = Math.sqrt(x * x + y * y + z * z);
+                const normalFactor = this.isInverted ? -1 : 1;
+                this.normals.push(x / length * normalFactor, y / length * normalFactor, z / length * normalFactor);
 
                 if (i < this.segments && j < this.segments) {
                     const a = i * (this.segments + 1) + j;
                     const b = a + this.segments + 1;
 
-                    indices[index++] = a;
-                    indices[index++] = b;
-                    indices[index++] = a + 1;
+                    if(this.isInverted){
+                        indices[index++] = a;
+                        indices[index++] = b;
+                        indices[index++] = a + 1;
 
-                    indices[index++] = b;
-                    indices[index++] = b + 1;
-                    indices[index++] = a + 1;
+                        indices[index++] = b;
+                        indices[index++] = b + 1;
+                        indices[index++] = a + 1;
+                    }else{
+                        indices[index++] = a;
+                        indices[index++] = a + 1;
+                        indices[index++] = b;
+
+                        indices[index++] = b;
+                        indices[index++] = a + 1;
+                        indices[index++] = b + 1;
+                    }                
                 }
             }
         }
@@ -60,6 +79,7 @@ class Sphere {
         this.vertices = vertices;
         this.indices = indices;
         this.texCoords = new Float32Array(this.texCoords);
+        this.normals = new Float32Array(this.normals);
     }
 }
 export { Sphere };

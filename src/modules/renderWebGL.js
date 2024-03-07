@@ -1,12 +1,90 @@
 import camera from "./camera";
-import { initShaders } from "./shaders";
-import { updateCameraPosition,updateCameraOrbit } from "./controllers";
+import { mat4 } from "gl-matrix";
 import { Sphere } from "./sphere";
 import { loadTexture } from "./textures";
-// Import the texture image
-import starfieldTexture from '../images/16kBaseMap.jpg';
+import { shaderProgramInit } from "./shaders";
+import earthTexturePath from '../images/8kearth.jpg';
+import starfieldTexturePath from '../images/starfield4k.png';
+import { updateCameraPosition, updateCameraOrbit } from "./controllers";
 
-let sphereBuffers = null;
+//global variables for the spheres
+let earthShaderProgram, skyboxProgram;
+let earthTexture, starfieldTexture;
+let earthSphereBuffers, skyboxSphereBuffers;
+
+let gl = null;
+
+///// test for the shaders
+const earthVertexShaderSource = `
+    attribute vec3 a_position;
+    attribute vec2 a_texCoord; // New attribute for texture coordinates
+    attribute vec3 a_normal; // New attribute for normals
+
+    uniform mat4 u_viewMatrix;
+    uniform mat4 u_projectionMatrix;
+    uniform mat4 u_normalMatrix;
+
+    varying vec2 v_texCoord; // For passing the texture coord to the fragment shader
+    varying vec3 v_lighting; // For passing the lighting effect to the fragment shader
+
+    void main() {
+        gl_Position = u_projectionMatrix * u_viewMatrix * vec4(a_position, 1.0);
+        v_texCoord = a_texCoord; // Pass texture coord to the fragment shader
+
+        //apply lightning effect
+        highp vec3 ambientLight = vec3(0.5, 0.5, 0.5);
+        highp vec3 directionalLightColor = vec3(1, 1, 1);
+        highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+
+        highp vec4 transformedNormal = u_normalMatrix * vec4(a_normal, 1.0);
+
+        highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
+        v_lighting = ambientLight + (directionalLightColor * directional);
+    }
+
+`;
+
+const earthFragmentShaderSource = `
+    precision mediump float;
+
+    varying vec2 v_texCoord; // Received from the vertex shader
+    varying vec3 v_lighting; // Received from the vertex shader
+
+
+    uniform sampler2D u_texture; // The texture sampler
+
+    void main() {
+        highp vec4 texelColor = texture2D(u_texture, v_texCoord);
+
+        gl_FragColor = vec4(texelColor.rgb * v_lighting, texelColor.a);
+    }
+`;
+
+const skyboxVertexShaderSource = `
+    attribute vec3 a_position;
+    attribute vec2 a_texCoord;
+
+    uniform mat4 u_viewMatrix;
+    uniform mat4 u_projectionMatrix;
+
+    varying highp vec2 v_texCoord;
+
+    void main() {
+        gl_Position = u_projectionMatrix * u_viewMatrix * vec4(a_position, 1.0);
+        v_texCoord = a_texCoord;
+    }
+`;
+
+const skyboxFragmentShaderSource = `
+    precision mediump float;
+
+    varying highp vec2 v_texCoord;
+    uniform sampler2D u_texture;
+
+    void main() {
+        gl_FragColor = texture2D(u_texture, v_texCoord);
+    }
+`;
 
 function init() {
     const canvas = document.getElementById('webgl-canvas');
@@ -15,47 +93,44 @@ function init() {
     setup(canvas);
 }
 
-function setup(canvas) {
-    const gl = canvas.getContext('webgl');
+async function setup(canvas) {
+    gl = canvas.getContext('webgl', { xrCompatible: true });
     if (!gl) {
         alert('WebGL is not supported');
         return;
     }
 
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.enable(gl.DEPTH_TEST);
+    await initTextures(gl);
 
-    const {vertexShader, fragmentShader} = initShaders(gl);
+    //init the shaders
+    earthShaderProgram = shaderProgramInit(gl, earthVertexShaderSource, earthFragmentShaderSource);
+    skyboxProgram = shaderProgramInit(gl, skyboxVertexShaderSource, skyboxFragmentShaderSource);
 
-    const program = gl.createProgram();
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-    gl.useProgram(program);
-
-    sphereBuffers = initSphereBuffers(gl, new Sphere(1, 32));
-    //setupBuffers(gl, program);
-
-    camera.position = [0, 0, 1.5];
-
-    //load a texture
-    const texture = loadTexture(gl, starfieldTexture);
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.uniform1i(gl.getUniformLocation(program, 'u_texture'), 0);
+    //setup the sphere rendering - basically its shaders and buffers
+    setupSphereRendering(gl);
+    camera.position = [0, 0, 3];
 
     let lastTime = 0;
     function animate(now) {
         requestAnimationFrame(animate);
-        
+
         if (!lastTime) lastTime = now;
-        const deltaTime = (now - lastTime) / 1000; // Convert to seconds
-        
+        const deltaTime = (now - lastTime) / 1000;
+
+        // clear the canvas
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.enable(gl.DEPTH_TEST);
+
         updateCameraPosition(deltaTime);
         updateCameraOrbit(deltaTime);
-        render(gl, camera, program);
-        
+
+        const viewMatrix = camera.getViewMatrix();
+        const projectionMatrix = camera.getProjectionMatrix();
+
+        //renderSkybox(gl, viewMatrix, projectionMatrix,  skyboxProgram);
+        renderEarth(gl, viewMatrix, projectionMatrix,  earthShaderProgram);
+
         lastTime = now;
     }
 
@@ -71,40 +146,70 @@ function initSphereBuffers(gl, sphere) {
     const indexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, sphere.indices, gl.STATIC_DRAW);
-    
+
     const textureCoordBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, sphere.texCoords, gl.STATIC_DRAW);
 
+    //normals buffer
+    const normalBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, sphere.normals, gl.STATIC_DRAW);
+
     return {
         vertexBuffer,
         indexBuffer,
-        vertexCount: sphere.indices.length,
-        textureCoordBuffer
+        textureCoordBuffer,
+        normalBuffer,
+        vertexCount: sphere.indices.length
     };
 }
 
-function render(gl, camera, program) {
-    const viewMatrix = camera.getViewMatrix();
-    const projectionMatrix = camera.getProjectionMatrix();
-    
-    //get the locations of the uniform variables in the shaders
-    const viewMatrixLocation = gl.getUniformLocation(program, 'u_viewMatrix');
-    const projectionMatrixLocation = gl.getUniformLocation(program, 'u_projectionMatrix');
-    
-    //set the uniform values
-    gl.uniformMatrix4fv(viewMatrixLocation, false, viewMatrix);
-    gl.uniformMatrix4fv(projectionMatrixLocation, false, projectionMatrix);
-    
-    const mySphere = new Sphere(1, 128);
-    const sphereBuffers = initSphereBuffers(gl, mySphere);
-    drawSphere(gl, program, sphereBuffers);
+async function initTextures(gl) {
+    earthTexture = await loadTexture(gl, earthTexturePath);
+    starfieldTexture = await loadTexture(gl, starfieldTexturePath);
 }
 
-function drawSphere(gl, program, sphereBuffers) {
+function setupSphereRendering(gl) {
+    const earthSphere = new Sphere(1, 128);
+    earthSphereBuffers = initSphereBuffers(gl, earthSphere);
+
+    const skyboxSphere = new Sphere(1000, 32, true);
+    skyboxSphereBuffers = initSphereBuffers(gl, skyboxSphere);
+}
+
+function renderEarth(gl, viewMatrix, projectionMatrix, program) {
+    gl.useProgram(program);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, earthTexture);
+    gl.uniform1i(gl.getUniformLocation(program, 'u_texture'), 0);
+
+    setMatrixUniforms(gl, program, viewMatrix, projectionMatrix);
+
+    drawSphere(gl, program, earthSphereBuffers);
+}
+
+function renderSkybox(gl, viewMatrix, projectionMatrix, program) {
+    gl.useProgram(program);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, starfieldTexture);
+    gl.uniform1i(gl.getUniformLocation(program, 'u_texture'), 0);
+
+    // For skybox, you might want to remove the translation from the viewMatrix
+    const viewMatrixNoTranslation = mat4.clone(viewMatrix);
+    viewMatrixNoTranslation[12] = 0; // x translation
+    viewMatrixNoTranslation[13] = 0; // y translation
+    viewMatrixNoTranslation[14] = 0; // z translation
+
+    setMatrixUniforms(gl, program, viewMatrixNoTranslation, projectionMatrix);
+
+    drawSphere(gl, program, skyboxSphereBuffers, false);
+}
+
+
+function drawSphere(gl, program, sphereBuffers, normals = true) {
     const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
-    const projectionMatrixLocation = gl.getUniformLocation(program, 'u_projectionMatrix');
-    const modelViewMatrixLocation = gl.getUniformLocation(program, 'u_viewMatrix');
 
     // Bind the sphere vertex buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, sphereBuffers.vertexBuffer);
@@ -120,12 +225,32 @@ function drawSphere(gl, program, sphereBuffers) {
     gl.vertexAttribPointer(textureCoordAttributeLocation, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(textureCoordAttributeLocation);
 
-    // Set uniforms
-    gl.uniformMatrix4fv(projectionMatrixLocation, false, camera.getProjectionMatrix());
-    gl.uniformMatrix4fv(modelViewMatrixLocation, false, camera.getViewMatrix());
+    if (normals) {
+        // Bind the sphere normal buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, sphereBuffers.normalBuffer);
+        const normalAttributeLocation = gl.getAttribLocation(program, 'a_normal');
+        gl.vertexAttribPointer(normalAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(normalAttributeLocation);
+    }
 
     // Draw the sphere
     gl.drawElements(gl.TRIANGLES, sphereBuffers.vertexCount, gl.UNSIGNED_SHORT, 0);
 }
 
-init();
+function setMatrixUniforms(gl, program, viewMatrix, projectionMatrix) {
+    const uViewMatrixLocation = gl.getUniformLocation(program, 'u_viewMatrix');
+    const uProjectionMatrixLocation = gl.getUniformLocation(program, 'u_projectionMatrix');
+    const uNormalMatrixLocation = gl.getUniformLocation(program, 'u_normalMatrix');
+
+    const normalMatrix = mat4.create();
+    mat4.invert(normalMatrix, viewMatrix);
+    mat4.transpose(normalMatrix, normalMatrix);
+    
+    gl.uniformMatrix4fv(uViewMatrixLocation, false, viewMatrix);
+    gl.uniformMatrix4fv(uProjectionMatrixLocation, false, projectionMatrix);
+    gl.uniformMatrix4fv(uNormalMatrixLocation, false, normalMatrix);
+}
+
+
+export {init, renderEarth, renderSkybox, gl, earthShaderProgram, skyboxProgram, text, earthTexture, starfieldTexture}; 
+//init();

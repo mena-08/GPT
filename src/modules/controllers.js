@@ -71,31 +71,62 @@ function onMouseMove(event) {
     lastMouseY = event.clientY;
 }
 
-function updateCameraOrbit(deltaTime) {
-    const orbitSpeed = 0.2; // Adjust as needed
+document.addEventListener('wheel', onWheel, false);
 
-    // Assume a spherical coordinate system for the camera position
+function onWheel(event) {
+    const zoomSpeed = 0.1;
+
+    //calculate the zoom direction based on the wheel delta
+    const zoomDirection = event.deltaY > 0 ? -1 : 1;
+
+    //calculate the vector from the camera to its target
+    let cameraDirection = [
+        camera.target[0] - camera.position[0],
+        camera.target[1] - camera.position[1],
+        camera.target[2] - camera.position[2]
+    ];
+
+    //normalize the direction vector
+    const length = Math.sqrt(cameraDirection[0] * cameraDirection[0] + 
+                             cameraDirection[1] * cameraDirection[1] + 
+                             cameraDirection[2] * cameraDirection[2]);
+    cameraDirection = [
+        cameraDirection[0] / length,
+        cameraDirection[1] / length,
+        cameraDirection[2] / length
+    ];
+
+    //uppdate the camera's position based on the zoom direction and speed
+    camera.position[0] += cameraDirection[0] * zoomSpeed * zoomDirection;
+    camera.position[1] += cameraDirection[1] * zoomSpeed * zoomDirection;
+    camera.position[2] += cameraDirection[2] * zoomSpeed * zoomDirection;
+
+    //update the camera's view matrix
+    camera.updateViewMatrix();
+}
+
+
+function updateCameraOrbit(deltaTime) {
+    const orbitSpeed = 0.2;
+
+    //spherical coordinates of the camera position
     let radius = Math.sqrt(camera.position[0] ** 2 + camera.position[1] ** 2 + camera.position[2] ** 2);
-    let theta = Math.atan2(camera.position[0], camera.position[2]); // Azimuth
+    let theta = Math.atan2(camera.position[0], camera.position[2]); // Azimuthal angle
     let phi = Math.acos(camera.position[1] / radius); // Polar angle
 
-    // Adjust theta and phi based on mouse movement
     theta -= mouseDelta.x * deltaTime * orbitSpeed;
     phi -= mouseDelta.y * deltaTime * orbitSpeed;
 
-    // Clamp phi to avoid flipping at the poles
+    //clamp phi to avoid flipping at the poles
     phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi));
 
-    // Convert spherical coordinates back to Cartesian for the camera position
+    //spherical to xyz coordinates
     camera.position[0] = radius * Math.sin(phi) * Math.sin(theta);
     camera.position[1] = radius * Math.cos(phi);
     camera.position[2] = radius * Math.sin(phi) * Math.cos(theta);
 
-    // Reset mouse delta after updating
     mouseDelta.x = 0;
     mouseDelta.y = 0;
-
-    // Update the camera's view matrix
     camera.updateViewMatrix();
 }
 
