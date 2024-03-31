@@ -1,4 +1,4 @@
-import { quat, mat4 } from 'gl-matrix';
+import { quat, mat4, vec3 } from 'gl-matrix';
 class Sphere {
     constructor(radius, segments, isInverted = true) {
         this.vertices = [];
@@ -10,7 +10,7 @@ class Sphere {
         this.isInverted = isInverted;
         this.orientation = quat.create();
         this.modelMatrix = mat4.create();
-        this.position = [0, 0, 0];
+        this.position = vec3.create();
         this.generateGeometry();
     }
 
@@ -19,28 +19,33 @@ class Sphere {
         quat.multiply(this.orientation, this.orientation, rotationQuat);
         mat4.fromQuat(this.modelMatrix, this.orientation);
     }
-
-
-    setOrientation(orientation) {
-        this.orientation = orientation;
-        mat4.fromQuat(this.modelMatrix, this.orientation);
+    
+    translate(x,y,z) {
+        this.position = [x,y,z];
+        this.updateModelMatrix();
     }
 
     resetOrientation() {
         quat.identity(this.orientation);
         mat4.identity(this.modelMatrix);
     }
-
+    
     setIdentityModelMatrix() {
         mat4.identity(this.modelMatrix);
     }
 
-    getRotation() {
-        return this.orientation;
+    setOrientation(orientation) {
+        this.orientation = orientation;
+        mat4.fromQuat(this.modelMatrix, this.orientation);
     }
 
-    translate(translation) {
-        this.position = translation;
+    setPosition(x,y,z){
+        this.position = [x,y,z];
+        //this.updateModelMatrix();
+    }
+
+    getRotation() {
+        return this.orientation;
     }
 
     getPosition() {
@@ -51,6 +56,15 @@ class Sphere {
         quat.identity(this.orientation);
         mat4.identity(this.modelMatrix);
     }
+
+    updateModelMatrix() {
+        mat4.identity(this.modelMatrix);
+        mat4.translate(this.modelMatrix, this.modelMatrix, this.position);
+        let rotationMatrix = mat4.create();
+        mat4.fromQuat(rotationMatrix, this.orientation);
+        mat4.multiply(this.modelMatrix, this.modelMatrix, rotationMatrix);
+    }
+    
 
     generateGeometry() {
         const phiStart = 0;

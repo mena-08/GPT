@@ -115,14 +115,6 @@ async function loadHighQualityTexture(gl) {
     },1000);
 }
 
-function setupSphereRendering(gl) {
-    const earthSphere = new Sphere(1, 80, false);
-    earthSphereBuffers = initSphereBuffers(gl, earthSphere);
-
-    const skyboxSphere = new Sphere(1000, 32, true);
-    skyboxSphereBuffers = initSphereBuffers(gl, skyboxSphere);
-}
-
 function renderEarth(gl, viewMatrix, projectionMatrix, program, modelMatrix) {
     gl.useProgram(program);
     gl.activeTexture(gl.TEXTURE0);

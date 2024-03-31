@@ -1,21 +1,20 @@
 import { gl, earthShaderProgram, renderSkybox, renderEarth, init, earthSphere } from './renderWebGL';
 import { startRecording, stopRecording } from './audioManager';
-import { mat4 ,quat } from 'gl-matrix';
+import { mat4 ,quat, vec3, vec4 } from 'gl-matrix';
 
 let xrSession = null;
 let xrReferenceSpace = null;
 let controllers = [];
 
 let sphereOrientation = quat.create();
-let initialSphereOrientation = quat.create();
 let delta = quat.create();
+let gripPosition = vec3.create();
 
 export async function onEnterXRClicked() {
     try {
         const session = await navigator.xr.requestSession('immersive-vr', {
             //optionalFeatures: ["depth-sensing", "dom-overlay", "hand-tracking", "hit-test", "layers", "light-estimation", "viewer"]
             optionalFeatures: ["local", "hand-tracking"]
-            //optionalFeatures : ["hand-tracking"]
         });
 
         onSessionStarted(session);
@@ -26,18 +25,19 @@ export async function onEnterXRClicked() {
 
 function onSessionStarted(session) {
     //create an XRWebGLLayer using the XR Session and my WebGL context
+
+    earthSphere.translate(0, 5, 0);
     xrSession = session;
     let nativeScaleFactor = XRWebGLLayer.getNativeFramebufferScaleFactor(xrSession);
     let xrLayer = new XRWebGLLayer(session, gl, { framebufferScaleFactor: nativeScaleFactor });
-
+    
     session.updateRenderState({ baseLayer: xrLayer });
-
-    //set up event listeners for session events
+    
     session.addEventListener('end', onSessionEnded);
     session.addEventListener('inputsourceschange', onInputSourcesChange);
     session.addEventListener('selectstart', onSelectStart);
     session.addEventListener('selectend', onSelectEnd);
-
+    
     //set up the XR reference space
     session.requestReferenceSpace('local').then((refSpace) => {
         xrReferenceSpace = refSpace;
@@ -52,11 +52,10 @@ function onSessionEnded(event) {
 }
 
 function onInputSourcesChange(event) {
-    // Clear existing controllers array
     controllers = [];
-
+    
     event.session.inputSources.forEach((inputSource) => {
-        console.log(inputSource);
+        //controller
         if(inputSource.targetRayMode === 'tracked-pointer'){
             const controller = {
                 inputSource: inputSource,
@@ -64,7 +63,7 @@ function onInputSourcesChange(event) {
                 buttonPressed: false,
             };
             controllers.push(controller);
-        }
+        }//hands
         if(inputSource.hand){
             const hand = {
                 inputSource: inputSource,
@@ -90,8 +89,6 @@ function onSelectStart(event) {
     if (controllerIndex !== -1) {
         controllers[controllerIndex].buttonPressed = true;
     }
-    //quat.copy(sphereOrientation,lastInteractionOrientation);
-    //console.log('lastInteractionOrientation',lastInteractionOrientation);
 }
 
 function onSelectEnd(event) {
@@ -107,8 +104,6 @@ function onXRFrame(time, frame) {
     let viewerPose = frame.getViewerPose(xrReferenceSpace);
 
     if (viewerPose) {
-
-        //mat4.identity(sphereModelMatrix);
         earthSphere.setIdentityModelMatrix();
         
         for (let controller of controllers) {
@@ -122,18 +117,25 @@ function onXRFrame(time, frame) {
                         gripPose.transform.orientation.z,
                         gripPose.transform.orientation.w
                     );
-
+                    
                     let diff = quat.create();
                     quat.invert(gripOrientation, gripOrientation);
                     quat.multiply(diff, gripOrientation, sphereOrientation);
-                    console.log("diff", diff);
                     quat.copy(delta, diff);
+
+                    gripPosition = gripPose.transform.position;
+
                 }
             }
         }
-        //mat4.fromQuat(sphereModelMatrix, delta);
+        
         earthSphere.setOrientation(delta);
-
+        //weird ass stuff, look further into ths
+        if(gripPosition['0'] != 0){
+            earthSphere.translate(gripPosition.x+2, gripPosition.y+2, gripPosition.z);
+            console.log("gripPosition", earthSphere.getPosition());
+        }
+        
         gl.bindFramebuffer(gl.FRAMEBUFFER, xrSession.renderState.baseLayer.framebuffer);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
