@@ -14,9 +14,11 @@ if ('xr' in navigator) {
     navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
         if (supported) {
             const button = document.getElementById('xr-button');
-            button.innerText = 'Enter VR';
             button.addEventListener('click', onEnterXRClicked);
         } else {
+            const button = document.getElementById('xr-button');
+            button.disabled = true;
+            button.style.display = 'none';
             alert('Immersive VR is not supported');
         }
     });

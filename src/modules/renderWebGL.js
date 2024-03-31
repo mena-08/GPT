@@ -1,90 +1,23 @@
 import camera from "./camera";
 import { mat4 } from "gl-matrix";
 import { Sphere } from "./sphere";
-import { loadTexture } from "./textures";
+import { loadImage, loadTexture } from "./textures";
 import { shaderProgramInit } from "./shaders";
-import earthTexturePath from '../images/unused/8kearth.jpg';
+import earthTexturePath from '../images/unused/2kearth.jpg';
+import highQualityEarthTexturePath from '../images/unused/10kBaseMap.jpg';
 import starfieldTexturePath from '../images/unused/starfield4k.png';
 import { updateCameraPosition, updateCameraOrbit } from "./controllers";
+import vertexShaderSource from '../shaderFiles/earthVertexShader.glsl';
+import fragmentShaderSource from '../shaderFiles/earthFragmentShader.glsl';
+
 
 //global variables for the spheres
-let earthShaderProgram, skyboxProgram;
-let earthTexture, starfieldTexture;
-let earthSphereBuffers, skyboxSphereBuffers;
-
 let gl = null;
-
-///// test for the shaders
-const earthVertexShaderSource = `
-    attribute vec3 a_position;
-    attribute vec2 a_texCoord; // New attribute for texture coordinates
-    attribute vec3 a_normal; // New attribute for normals
-
-    uniform mat4 u_viewMatrix;
-    uniform mat4 u_projectionMatrix;
-    uniform mat4 u_normalMatrix;
-
-    varying vec2 v_texCoord; // For passing the texture coord to the fragment shader
-    varying vec3 v_lighting; // For passing the lighting effect to the fragment shader
-
-    void main() {
-        gl_Position = u_projectionMatrix * u_viewMatrix * vec4(a_position, 1.0);
-        v_texCoord = a_texCoord; // Pass texture coord to the fragment shader
-
-        //apply lightning effect
-        mediump vec3 ambientLight = vec3(0.5, 0.5, 0.5);
-        mediump vec3 directionalLightColor = vec3(1, 1, 1);
-        mediump vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
-
-        highp vec4 transformedNormal = u_normalMatrix * vec4(a_normal, 1.0);
-
-        highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
-        v_lighting = ambientLight + (directionalLightColor * directional);
-    }
-
-`;
-
-const earthFragmentShaderSource = `
-    precision mediump float;
-
-    varying vec2 v_texCoord; // Received from the vertex shader
-    varying vec3 v_lighting; // Received from the vertex shader
-
-
-    uniform sampler2D u_texture; // The texture sampler
-
-    void main() {
-        highp vec4 texelColor = texture2D(u_texture, v_texCoord);
-
-        gl_FragColor = vec4(texelColor.rgb * v_lighting, texelColor.a);
-    }
-`;
-
-const skyboxVertexShaderSource = `
-    attribute vec3 a_position;
-    attribute vec2 a_texCoord;
-
-    uniform mat4 u_viewMatrix;
-    uniform mat4 u_projectionMatrix;
-
-    varying mediump vec2 v_texCoord;
-
-    void main() {
-        gl_Position = u_projectionMatrix * u_viewMatrix * vec4(a_position, 1.0);
-        v_texCoord = a_texCoord;
-    }
-`;
-
-const skyboxFragmentShaderSource = `
-    precision mediump float;
-
-    varying highp vec2 v_texCoord;
-    uniform sampler2D u_texture;
-
-    void main() {
-        gl_FragColor = texture2D(u_texture, v_texCoord);
-    }
-`;
+let earthSphere;
+let nextTexture = null;
+let earthShaderProgram, skyboxProgram;
+let earthTexture, starfieldTexture = null;
+let earthSphereBuffers, skyboxSphereBuffers;
 
 function init() {
     const canvas = document.getElementById('webgl-canvas');
@@ -100,20 +33,21 @@ async function setup(canvas) {
         return;
     }
 
-    await initTextures(gl);
-
-    //init the shaders
-    earthShaderProgram = shaderProgramInit(gl, earthVertexShaderSource, earthFragmentShaderSource);
-    skyboxProgram = shaderProgramInit(gl, skyboxVertexShaderSource, skyboxFragmentShaderSource);
+    initTextures(gl);
+    earthShaderProgram = shaderProgramInit(gl, vertexShaderSource, fragmentShaderSource);
+    //skyboxProgram = shaderProgramInit(gl, skyboxVertexShaderSource, skyboxFragmentShaderSource);
 
     //setup the sphere rendering - basically its shaders and buffers
-    setupSphereRendering(gl);
+    earthSphere = new Sphere(1, 80, false);
+    earthSphereBuffers = initSphereBuffers(gl, earthSphere);
+    // const skyboxSphere = new Sphere(1000, 32, true);
+    // skyboxSphereBuffers = initSphereBuffers(gl, skyboxSphere);
+
     camera.position = [0, 0, 3];
-
     let lastTime = 0;
-    function animate(now) {
-        requestAnimationFrame(animate);
 
+    function animate(now) {
+        
         if (!lastTime) lastTime = now;
         const deltaTime = (now - lastTime) / 1000;
 
@@ -125,15 +59,18 @@ async function setup(canvas) {
         updateCameraPosition(deltaTime);
         updateCameraOrbit(deltaTime);
 
+        camera.updateViewMatrix();
+
         const viewMatrix = camera.getViewMatrix();
         const projectionMatrix = camera.getProjectionMatrix();
 
         //renderSkybox(gl, viewMatrix, projectionMatrix,  skyboxProgram);
-        renderEarth(gl, viewMatrix, projectionMatrix,  earthShaderProgram);
+        renderEarth(gl, viewMatrix, projectionMatrix,  earthShaderProgram, earthSphere.modelMatrix);
 
         lastTime = now;
-    }
 
+        requestAnimationFrame(animate);
+    }
     requestAnimationFrame(animate);
 }
 
@@ -168,23 +105,33 @@ function initSphereBuffers(gl, sphere) {
 async function initTextures(gl) {
     earthTexture = await loadTexture(gl, earthTexturePath);
     //starfieldTexture = await loadTexture(gl, starfieldTexturePath);
+    loadHighQualityTexture(gl);
+}
+
+async function loadHighQualityTexture(gl) {
+    nextTexture = await loadTexture(gl, highQualityEarthTexturePath);
+    setTimeout(()=>{
+        earthTexture = nextTexture;
+    },1000);
 }
 
 function setupSphereRendering(gl) {
-    const earthSphere = new Sphere(1, 32);
+    const earthSphere = new Sphere(1, 80, false);
     earthSphereBuffers = initSphereBuffers(gl, earthSphere);
 
     const skyboxSphere = new Sphere(1000, 32, true);
     skyboxSphereBuffers = initSphereBuffers(gl, skyboxSphere);
 }
 
-function renderEarth(gl, viewMatrix, projectionMatrix, program) {
+function renderEarth(gl, viewMatrix, projectionMatrix, program, modelMatrix) {
     gl.useProgram(program);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, earthTexture);
     gl.uniform1i(gl.getUniformLocation(program, 'u_texture'), 0);
 
     setMatrixUniforms(gl, program, viewMatrix, projectionMatrix);
+    const modelMatrixLocation = gl.getUniformLocation(program, 'u_modelMatrix');
+    gl.uniformMatrix4fv(modelMatrixLocation, false, modelMatrix);
 
     drawSphere(gl, program, earthSphereBuffers);
 }
@@ -196,7 +143,6 @@ function renderSkybox(gl, viewMatrix, projectionMatrix, program) {
     gl.bindTexture(gl.TEXTURE_2D, starfieldTexture);
     gl.uniform1i(gl.getUniformLocation(program, 'u_texture'), 0);
 
-    // For skybox, you might want to remove the translation from the viewMatrix
     const viewMatrixNoTranslation = mat4.clone(viewMatrix);
     viewMatrixNoTranslation[12] = 0; // x translation
     viewMatrixNoTranslation[13] = 0; // y translation
@@ -235,6 +181,8 @@ function drawSphere(gl, program, sphereBuffers, normals = true) {
 
     // Draw the sphere
     gl.drawElements(gl.TRIANGLES, sphereBuffers.vertexCount, gl.UNSIGNED_SHORT, 0);
+
+    //alert(Date.now());
 }
 
 function setMatrixUniforms(gl, program, viewMatrix, projectionMatrix) {
@@ -252,5 +200,5 @@ function setMatrixUniforms(gl, program, viewMatrix, projectionMatrix) {
 }
 
 
-export {init, renderEarth, renderSkybox, gl, earthShaderProgram, skyboxProgram, text, earthTexture, starfieldTexture}; 
+export {init, renderEarth, renderSkybox, gl, earthShaderProgram, skyboxProgram, text, earthTexture, starfieldTexture, earthSphere}; 
 //init();

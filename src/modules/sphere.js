@@ -1,13 +1,55 @@
+import { quat, mat4 } from 'gl-matrix';
 class Sphere {
     constructor(radius, segments, isInverted = true) {
-        this.radius = radius;
-        this.segments = segments;
         this.vertices = [];
         this.indices = [];
         this.texCoords = [];
         this.normals = [];
+        this.radius = radius;
+        this.segments = segments;
         this.isInverted = isInverted;
+        this.orientation = quat.create();
+        this.modelMatrix = mat4.create();
+        this.position = [0, 0, 0];
         this.generateGeometry();
+    }
+
+    rotate(rotationQuat) {
+        quat.invert(this.orientation, this.orientation);
+        quat.multiply(this.orientation, this.orientation, rotationQuat);
+        mat4.fromQuat(this.modelMatrix, this.orientation);
+    }
+
+
+    setOrientation(orientation) {
+        this.orientation = orientation;
+        mat4.fromQuat(this.modelMatrix, this.orientation);
+    }
+
+    resetOrientation() {
+        quat.identity(this.orientation);
+        mat4.identity(this.modelMatrix);
+    }
+
+    setIdentityModelMatrix() {
+        mat4.identity(this.modelMatrix);
+    }
+
+    getRotation() {
+        return this.orientation;
+    }
+
+    translate(translation) {
+        this.position = translation;
+    }
+
+    getPosition() {
+        return this.position;
+    }
+
+    resetOrientation() {
+        quat.identity(this.orientation);
+        mat4.identity(this.modelMatrix);
     }
 
     generateGeometry() {
@@ -55,7 +97,7 @@ class Sphere {
                     const a = i * (this.segments + 1) + j;
                     const b = a + this.segments + 1;
 
-                    if(this.isInverted){
+                    if (this.isInverted) {
                         indices[index++] = a;
                         indices[index++] = b;
                         indices[index++] = a + 1;
@@ -63,7 +105,7 @@ class Sphere {
                         indices[index++] = b;
                         indices[index++] = b + 1;
                         indices[index++] = a + 1;
-                    }else{
+                    } else {
                         indices[index++] = a;
                         indices[index++] = a + 1;
                         indices[index++] = b;
@@ -71,7 +113,7 @@ class Sphere {
                         indices[index++] = b;
                         indices[index++] = a + 1;
                         indices[index++] = b + 1;
-                    }                
+                    }
                 }
             }
         }

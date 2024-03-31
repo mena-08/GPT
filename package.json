@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "cross-env NODE_EXTRA_CA_CERTS=./server.cert parcel src/index.html --",
+    "start": "parcel src/index.html --",
     "build": "parcel build src/index.html"
   },
   "keywords": [],
@@ -12,6 +12,7 @@
   "license": "ISC",
   "devDependencies": {
     "@parcel/resolver-glob": "^2.11.0",
+    "@parcel/transformer-glsl": "^2.11.0",
     "@parcel/transformer-inline-string": "^2.11.0",
     "cross-env": "^7.0.3",
     "parcel": "^2.11.0",

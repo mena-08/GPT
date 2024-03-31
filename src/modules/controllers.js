@@ -44,7 +44,7 @@ function updateCameraPosition(deltaTime) {
     camera.position[0] += cameraMovement.right * speed * deltaTime;
     camera.position[2] += cameraMovement.forward * speed * deltaTime;
 
-    camera.updateViewMatrix();
+    //camera.updateViewMatrix();
 }
 function onMouseDown(event) {
     isMouseDown = true;
@@ -127,7 +127,7 @@ function updateCameraOrbit(deltaTime) {
 
     mouseDelta.x = 0;
     mouseDelta.y = 0;
-    camera.updateViewMatrix();
+    //camera.updateViewMatrix();
 }
 
 export { updateCameraPosition, updateCameraOrbit};
