@@ -14,34 +14,13 @@ class Sphere {
         this.generateGeometry();
     }
 
-    rotate(rotationQuat) {
-        quat.invert(this.orientation, this.orientation);
-        quat.multiply(this.orientation, this.orientation, rotationQuat);
-        mat4.fromQuat(this.modelMatrix, this.orientation);
+    rotate(orientation) {
+        this.orientation = orientation;
     }
     
     translate(x,y,z) {
         this.position = [x,y,z];
         this.updateModelMatrix();
-    }
-
-    resetOrientation() {
-        quat.identity(this.orientation);
-        mat4.identity(this.modelMatrix);
-    }
-    
-    setIdentityModelMatrix() {
-        mat4.identity(this.modelMatrix);
-    }
-
-    setOrientation(orientation) {
-        this.orientation = orientation;
-        mat4.fromQuat(this.modelMatrix, this.orientation);
-    }
-
-    setPosition(x,y,z){
-        this.position = [x,y,z];
-        //this.updateModelMatrix();
     }
 
     getRotation() {
@@ -63,6 +42,7 @@ class Sphere {
         let rotationMatrix = mat4.create();
         mat4.fromQuat(rotationMatrix, this.orientation);
         mat4.multiply(this.modelMatrix, this.modelMatrix, rotationMatrix);
+        
     }
     
 

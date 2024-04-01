@@ -51,24 +51,20 @@ async function setup(canvas) {
         if (!lastTime) lastTime = now;
         const deltaTime = (now - lastTime) / 1000;
 
-        // clear the canvas
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.enable(gl.DEPTH_TEST);
 
         updateCameraPosition(deltaTime);
         updateCameraOrbit(deltaTime);
-
         camera.updateViewMatrix();
 
         const viewMatrix = camera.getViewMatrix();
         const projectionMatrix = camera.getProjectionMatrix();
-
-        //renderSkybox(gl, viewMatrix, projectionMatrix,  skyboxProgram);
         renderEarth(gl, viewMatrix, projectionMatrix,  earthShaderProgram, earthSphere.modelMatrix);
+        //renderSkybox(gl, viewMatrix, projectionMatrix,  skyboxProgram);
 
         lastTime = now;
-
         requestAnimationFrame(animate);
     }
     requestAnimationFrame(animate);
@@ -76,6 +72,7 @@ async function setup(canvas) {
 
 //create a buffer function for the sphere
 function initSphereBuffers(gl, sphere) {
+
     const vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, sphere.vertices, gl.STATIC_DRAW);
@@ -100,11 +97,11 @@ function initSphereBuffers(gl, sphere) {
         normalBuffer,
         vertexCount: sphere.indices.length
     };
+
 }
 
 async function initTextures(gl) {
     earthTexture = await loadTexture(gl, earthTexturePath);
-    //starfieldTexture = await loadTexture(gl, starfieldTexturePath);
     loadHighQualityTexture(gl);
 }
 
@@ -147,6 +144,7 @@ function renderSkybox(gl, viewMatrix, projectionMatrix, program) {
 
 
 function drawSphere(gl, program, sphereBuffers, normals = true) {
+
     const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
 
     // Bind the sphere vertex buffer
@@ -173,8 +171,7 @@ function drawSphere(gl, program, sphereBuffers, normals = true) {
 
     // Draw the sphere
     gl.drawElements(gl.TRIANGLES, sphereBuffers.vertexCount, gl.UNSIGNED_SHORT, 0);
-
-    //alert(Date.now());
+    
 }
 
 function setMatrixUniforms(gl, program, viewMatrix, projectionMatrix) {
