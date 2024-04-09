@@ -1,4 +1,3 @@
-//Implementation of an event emitter to link events in the app.
 class EventEmitter {
     constructor() {
         this.events = {};

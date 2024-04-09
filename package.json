@@ -21,6 +21,7 @@
   "dependencies": {
     "@tweenjs/tween.js": "^23.1.1",
     "gl-matrix": "^3.4.3",
+    "lt": "^0.3.3",
     "three": "^0.160.0",
     "tweakpane": "^4.0.3"
   },

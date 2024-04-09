@@ -1,15 +1,3 @@
-/**
- * The function `loadTexture` in JavaScript loads an image from a URL and creates a texture in WebGL
- * context.
- * @param gl - The `gl` parameter in the `loadTexture` function is the WebGL rendering context. It is
- * used to interact with WebGL API functions for loading and working with textures in a WebGL
- * application.
- * @param url - The `url` parameter in the `loadTexture` function is the URL of the image that you want
- * to load as a texture in WebGL. This URL will be used to fetch the image data and apply it to the
- * WebGL texture.
- * @returns The `loadTexture` function is being returned, which is a function that loads an image
- * texture asynchronously in WebGL using a Promise.
- */
 function loadTexture(gl, url) {
     return new Promise((resolve, reject) => {
         const texture = gl.createTexture();

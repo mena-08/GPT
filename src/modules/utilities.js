@@ -1,5 +1,5 @@
-import { Vector3 } from "three";
 import TWEEN from '@tweenjs/tween.js';
+import { vec3 } from "gl-matrix";
 
 function WGS84ToECEF(long, lat, alt) {
     //first convert the decimal degrees coordinates into radians
@@ -12,9 +12,10 @@ function WGS84ToECEF(long, lat, alt) {
     let y = (R + h) * Math.cos(lat_radians) * Math.sin(long_radians);
     let z = (R + h) * Math.sin(lat_radians);
     //as here the Y is up and -Z is towards us
-    return new Vector3(x, z, -y);
+    return new vec3.fromValues(x, z, -y);
 }
 
+//refactor this to use the new camera an not the three one
 function moveCameraToTarget(target_position, camera, duration = 3000) {
     let mid_point = target_position.clone().normalize().multiplyScalar(5);
     mid_point.y += 6;
@@ -39,12 +40,5 @@ function moveCameraToTarget(target_position, camera, duration = 3000) {
     tweenMid.start();
 }
 
-//a bit hardcoded for the reply from the gpt 
-function updateHTMLElement(data) {
-    const map_info_panel = document.getElementById('map-info');
-	if (map_info_panel) {
-		map_info_panel.textContent = JSON.stringify(data.reply);
-	}
-}
 
-export { moveCameraToTarget, updateHTMLElement, WGS84ToECEF };
+export { moveCameraToTarget, WGS84ToECEF };

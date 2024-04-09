@@ -1,20 +1,22 @@
 //import all the libraries/images needed, as Parcel needs to know about them
 //import './modules/chatManager';
-//import { animate, render } from './modules/render';
+
 //import './modules/audioManager';
 import './modules/utilities';
-import { init } from './modules/renderWebGL';
+import { initWebGL } from './modules/renderWebGL';
 import { onEnterXRClicked } from './modules/renderWebXR';
+import { requestMicrophoneAccess } from './modules/audioManager';
 
 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     alert("Your browser does not support audio recording.");
 }
 if ('xr' in navigator) {
-    init();
+    initWebGL();
     navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
         if (supported) {
             const button = document.getElementById('xr-button');
             button.addEventListener('click', onEnterXRClicked);
+            requestMicrophoneAccess();
         } else {
             const button = document.getElementById('xr-button');
             button.disabled = true;
@@ -23,9 +25,9 @@ if ('xr' in navigator) {
         }
     });
 } else {
+    initWebGL();
     alert('WebXR is not supported');
 }
-
 
 // https://en.wikipedia.org/wiki/Web_Map_Service
 
