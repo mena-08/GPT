@@ -160,7 +160,7 @@ class Sphere {
         this.buffers.vertexCount = this.indices.length;
     }
 
-    draw(shaderProgram, viewMatrix, projectionMatrix, texture, bumpMap = null) {
+    draw(shaderProgram, viewMatrix, projectionMatrix, texture, bumpMap = null, specularMap=null) {
         const gl = this.gl;
         gl.useProgram(shaderProgram);
         gl.activeTexture(gl.TEXTURE0);
@@ -174,6 +174,10 @@ class Sphere {
 
             const bumpMapScale = 0.048;
             gl.uniform1f(gl.getUniformLocation(shaderProgram, 'u_displacementStrength'), bumpMapScale);
+
+            gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_specularMap'), 2);
+            gl.activeTexture(gl.TEXTURE2);
+            gl.bindTexture(gl.TEXTURE_2D, specularMap);
         }
 
         //set matrix uniforms

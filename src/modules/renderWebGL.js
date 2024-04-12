@@ -13,10 +13,11 @@ import highQualityEarthTexturePath from '../images/unused/10kBaseMap.jpg';
 import starfieldTexturePath from '../images/unused/starfield4k.png';
 import moonTexturePath from '../images/unused/moon.jpg';
 import bumpTexturePath from '../images/unused/10kearthbump.jpg';
+import specularTexturePath from '../images/unused/10kearthspecular.jpg';
 
 let gl = null;
 
-let nextTexture, earthTexture, starfieldTexture, moonTexture, bumpTexture; //textures
+let nextTexture, earthTexture, starfieldTexture, moonTexture, bumpTexture, specularTexture; //textures
 let earthSphere, moonSphere, marker; //spheres
 let earthShaderProgram, skyboxProgram; //shader programs
 
@@ -51,7 +52,8 @@ async function setup(canvas) {
     function animate(now) {
         if (!lastTime) lastTime = now;
         const deltaTime = (now - lastTime) / 1000;
-
+        let currentTime = now * 0.001; 
+        
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.enable(gl.DEPTH_TEST);
@@ -62,11 +64,13 @@ async function setup(canvas) {
 
         const viewMatrix = camera.getViewMatrix();
         const projectionMatrix = camera.getProjectionMatrix();
-
+        
+        
         marker.draw(earthShaderProgram, viewMatrix, projectionMatrix);
-        earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, earthTexture, bumpTexture);
+        earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, earthTexture, bumpTexture, specularTexture);
         moonSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, moonTexture);
-
+        
+        gl.uniform1f(gl.getUniformLocation(earthShaderProgram, 'u_time'), currentTime);
         lastTime = now;
         requestAnimationFrame(animate);
     }
@@ -76,6 +80,7 @@ async function setup(canvas) {
 async function initTextures(gl) {
     earthTexture = await loadTexture(gl, earthTexturePath);
     moonTexture = await loadTexture(gl, moonTexturePath);
+    specularTexture = await loadTexture(gl, specularTexturePath);
     loadHighQualityTexture(gl);
 }
 
