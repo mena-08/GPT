@@ -1,6 +1,7 @@
-import { gl, earthShaderProgram, renderSkybox, renderEarth, earthSphere, earthTexture, moonSphere, moonTexture } from './renderWebGL';
+import { gl, earthShaderProgram, renderSkybox, marker, earthSphere, earthTexture, moonSphere, moonTexture } from './renderWebGL';
 import { startRecording, stopRecording, requestMicrophoneAccess } from './audioManager';
 import { quat, vec3 } from 'gl-matrix';
+import { WGS84ToECEF } from './utilities';
 //import audiosrc from '../ready.mp3';
 // import { audioElement } from './sound';
 
@@ -15,7 +16,7 @@ let initialGripPosition = vec3.create();
 
 export async function onEnterXRClicked() {
     try {
-        const session = await navigator.xr.requestSession('immersive-vr', {
+        const session = await navigator.xr.requestSession('immersive-ar', {
             //optionalFeatures: ["depth-sensing", "dom-overlay", "hand-tracking", "hit-test", "layers", "light-estimation", "viewer"]
             optionalFeatures: ["local", "hand-tracking", "depth-sensing", "hit-test", "light-estimation", "transparent"]
         });
@@ -159,9 +160,11 @@ function onXRFrame(time, frame) {
             gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
             const viewMatrix = view.transform.inverse.matrix;
             const projectionMatrix = view.projectionMatrix;
+            const positionOnSurface = WGS84ToECEF(19.432601, -99.13342, 0);
+            marker.setPositionOnSphere(positionOnSurface, earthSphere);
             earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, earthTexture);
             moonSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, moonTexture);
-            //renderEarth(gl, viewMatrix, projectionMatrix, earthShaderProgram, earthSphere.modelMatrix);
+            marker.draw(earthShaderProgram, viewMatrix, projectionMatrix); 
         }
     }
 }

@@ -7,6 +7,7 @@ class Sphere {
         this.texCoords = [];
         this.normals = [];
         this.buffers = {};
+        this.texture = undefined;
         this.radius = radius;
         this.segments = segments;
         this.isInverted = isInverted;
@@ -26,17 +27,17 @@ class Sphere {
         this.updateModelMatrix();
     }
 
+    resetOrientation() {
+        quat.identity(this.orientation);
+        mat4.identity(this.modelMatrix);
+    }
+    
     getRotation() {
         return this.orientation;
     }
 
     getPosition() {
         return this.position;
-    }
-
-    resetOrientation() {
-        quat.identity(this.orientation);
-        mat4.identity(this.modelMatrix);
     }
 
     updateModelMatrix() {
@@ -46,6 +47,7 @@ class Sphere {
         mat4.fromQuat(rotationMatrix, this.orientation);
         mat4.multiply(this.modelMatrix, this.modelMatrix, rotationMatrix);
     }
+
 
     getModelMatrix() {
         return this.modelMatrix;
@@ -158,18 +160,21 @@ class Sphere {
         this.buffers.vertexCount = this.indices.length;
     }
 
-
-    getBuffers() {
-        return this.buffers;
-    }
-
-    draw(shaderProgram, viewMatrix, projectionMatrix, texture) {
+    draw(shaderProgram, viewMatrix, projectionMatrix, texture, bumpMap = null) {
         const gl = this.gl;
-
         gl.useProgram(shaderProgram);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_texture'), 0);
+
+        if (bumpMap) {
+            gl.activeTexture(gl.TEXTURE1);
+            gl.bindTexture(gl.TEXTURE_2D, bumpMap);
+            gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_bumpMap'), 1);
+
+            const bumpMapScale = 0.048;
+            gl.uniform1f(gl.getUniformLocation(shaderProgram, 'u_displacementStrength'), bumpMapScale);
+        }
 
         //set matrix uniforms
         const uViewMatrixLocation = gl.getUniformLocation(shaderProgram, 'u_viewMatrix');
@@ -210,6 +215,28 @@ class Sphere {
 
         gl.drawElements(gl.TRIANGLES, this.buffers.vertexCount, gl.UNSIGNED_SHORT, 0);
     }
+
+    destroy() {
+        const gl = this.gl;
+    
+        // Delete buffers
+        if (this.buffers.vertexBuffer) gl.deleteBuffer(this.buffers.vertexBuffer);
+        if (this.buffers.indexBuffer) gl.deleteBuffer(this.buffers.indexBuffer);
+        if (this.buffers.textureCoordBuffer) gl.deleteBuffer(this.buffers.textureCoordBuffer);
+        if (this.buffers.normalBuffer) gl.deleteBuffer(this.buffers.normalBuffer);
+    
+        // If you have textures or shader programs specific to this object, delete them as well
+        if (this.texture) gl.deleteTexture(this.texture);
+        if (this.shaderProgram) {
+            gl.deleteProgram(this.shaderProgram);
+        }
+    
+        // Optionally, reset properties to indicate the object has been destroyed
+        this.buffers = {};
+        this.texture = null;
+        this.shaderProgram = null;
+    }
+    
 
 }
 export { Sphere };

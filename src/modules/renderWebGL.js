@@ -1,24 +1,24 @@
-import camera from "./camera";
 import { mat4 } from "gl-matrix";
 import { Sphere } from "./sphere";
-import { loadImage, loadTexture } from "./textures";
+import { loadTexture } from "./textures";
 import { shaderProgramInit } from "./loadShaders";
-import earthTexturePath from '../images/unused/2kearth.jpg';
-import highQualityEarthTexturePath from '../images/unused/10kBaseMap.jpg';
-import starfieldTexturePath from '../images/unused/starfield4k.png';
+import { Marker } from "./marker";
+import { WGS84ToECEF } from "./utilities";
+import camera from "./camera";
 import { updateCameraPosition, updateCameraOrbit } from "./controllers";
 import vertexShaderSource from '../shaders/earthVertexShader.glsl';
 import fragmentShaderSource from '../shaders/earthFragmentShader.glsl';
+import earthTexturePath from '../images/unused/2kearth.jpg';
+import highQualityEarthTexturePath from '../images/unused/10kBaseMap.jpg';
+import starfieldTexturePath from '../images/unused/starfield4k.png';
 import moonTexturePath from '../images/unused/moon.jpg';
+import bumpTexturePath from '../images/unused/10kearthbump.jpg';
 
-
-//global variables for the spheres
 let gl = null;
-let earthSphere;
-let nextTexture = null;
-let earthShaderProgram, skyboxProgram;
-let earthTexture, starfieldTexture = null;
-let moonSphere, moonTexture;
+
+let nextTexture, earthTexture, starfieldTexture, moonTexture, bumpTexture; //textures
+let earthSphere, moonSphere, marker; //spheres
+let earthShaderProgram, skyboxProgram; //shader programs
 
 function initWebGL() {
     const canvas = document.getElementById('webgl-canvas');
@@ -28,7 +28,7 @@ function initWebGL() {
 }
 
 async function setup(canvas) {
-    gl = canvas.getContext('webgl', { xrCompatible: true, alpha: true});
+    gl = canvas.getContext('webgl', { xrCompatible: true, alpha: true });
     if (!gl) {
         alert('WebGL is not supported');
         return;
@@ -36,18 +36,19 @@ async function setup(canvas) {
 
     initTextures(gl);
     earthShaderProgram = shaderProgramInit(gl, vertexShaderSource, fragmentShaderSource);
-    //skyboxProgram = shaderProgramInit(gl, skyboxVertexShaderSource, skyboxFragmentShaderSource);
 
-    //setup the sphere rendering - basically its shaders and buffers
-    earthSphere = new Sphere(gl,1, 120, false);
-    moonSphere = new Sphere(gl, 0.27, 120, false);
+    earthSphere = new Sphere(gl, 1, 255, false);
+    moonSphere = new Sphere(gl, 0.27, 100, false);
     moonSphere.translate(1.5, 0, 0);
+    marker = new Marker(gl, 0.1, 0.01, 32);
+
+    const positionOnSurface = WGS84ToECEF(19.432601, -99.13342, 0);
+    marker.setPositionOnSphere(positionOnSurface, earthSphere);
 
     camera.position = [0, 0, 3];
     let lastTime = 0;
 
     function animate(now) {
-        
         if (!lastTime) lastTime = now;
         const deltaTime = (now - lastTime) / 1000;
 
@@ -61,8 +62,11 @@ async function setup(canvas) {
 
         const viewMatrix = camera.getViewMatrix();
         const projectionMatrix = camera.getProjectionMatrix();
-        earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, earthTexture);
+
+        marker.draw(earthShaderProgram, viewMatrix, projectionMatrix);
+        earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, earthTexture, bumpTexture);
         moonSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, moonTexture);
+
         lastTime = now;
         requestAnimationFrame(animate);
     }
@@ -77,11 +81,11 @@ async function initTextures(gl) {
 
 async function loadHighQualityTexture(gl) {
     nextTexture = await loadTexture(gl, highQualityEarthTexturePath);
-    setTimeout(()=>{
+    bumpTexture = await loadTexture(gl, bumpTexturePath);
+    setTimeout(() => {
         earthTexture = nextTexture;
-    },1000);
+    }, 1000);
 }
-
 
 function renderSkybox(gl, viewMatrix, projectionMatrix, program) {
     gl.useProgram(program);
@@ -91,17 +95,27 @@ function renderSkybox(gl, viewMatrix, projectionMatrix, program) {
     gl.uniform1i(gl.getUniformLocation(program, 'u_texture'), 0);
 
     const viewMatrixNoTranslation = mat4.clone(viewMatrix);
-    viewMatrixNoTranslation[12] = 0; // x translation
-    viewMatrixNoTranslation[13] = 0; // y translation
-    viewMatrixNoTranslation[14] = 0; // z translation
+    viewMatrixNoTranslation[12] = 0;
+    viewMatrixNoTranslation[13] = 0;
+    viewMatrixNoTranslation[14] = 0;
 
     setMatrixUniforms(gl, program, viewMatrixNoTranslation, projectionMatrix);
 
     drawSphere(gl, program, skyboxSphereBuffers, false);
 }
 
-
-
-
-export {initWebGL, renderEarth, renderSkybox, gl, earthShaderProgram, skyboxProgram, text, earthTexture, starfieldTexture, earthSphere, moonSphere, moonTexture}; 
-//init();
+export {
+    initWebGL,
+    renderEarth,
+    renderSkybox,
+    gl,
+    earthShaderProgram,
+    skyboxProgram,
+    text,
+    earthTexture,
+    starfieldTexture,
+    earthSphere,
+    moonSphere,
+    moonTexture,
+    marker
+};

@@ -1,18 +1,18 @@
 import TWEEN from '@tweenjs/tween.js';
 import { vec3 } from "gl-matrix";
 
-function WGS84ToECEF(long, lat, alt) {
+function WGS84ToECEF(lat, long, alt) {
     //first convert the decimal degrees coordinates into radians
     let long_radians = long * (Math.PI / 180);
     let lat_radians = lat * (Math.PI / 180);
 
-    let R = 5;
+    let R = 1;
     let h = 0;
     let x = (R + h) * Math.cos(lat_radians) * Math.cos(long_radians);
     let y = (R + h) * Math.cos(lat_radians) * Math.sin(long_radians);
     let z = (R + h) * Math.sin(lat_radians);
-    //as here the Y is up and -Z is towards us
-    return new vec3.fromValues(x, z, -y);
+    //coordinates are flipped in the texture
+    return new vec3.fromValues(-x, z, y);
 }
 
 //refactor this to use the new camera an not the three one
