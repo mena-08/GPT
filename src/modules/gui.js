@@ -48,7 +48,7 @@ if (GUI){
                 handleButtonClick(mapName, index, category);
                 //document.getElementById('map-title-info').innerHTML = mapName;
                 document.getElementById('map-info').innerHTML = "Loading map information...";
-                sendToAPI(`Please give me information about a map of ${mapName} from the Earth? It belongs to the category of ${category} \n Please answer in a short paragraph and only the information relevant to the map. Please exclude any introduction words like, "sure!", "certainly!", etc. The information is meant for kids of 8 years. Also, don't include the quote characters.`, updateHTMLElement);
+                sendToAPI(`Please give me information about a map of ${mapName} from the Earth? It belongs to the category of ${category} \n Please answer in a short paragraph and only the information relevant to the map. Please exclude any introduction words like, "sure!", "certainly!", etc. The information is meant for kids of 8 years. Also, don't include the quote characters.`);
             });
         });
     });
@@ -91,13 +91,3 @@ if (GUI){
         eventEmitter.emit('textureChange', selectedMap);
     };
 }
-
-//a bit hardcoded for the reply from the gpt 
-function updateHTMLElement(data) {
-    const map_info_panel = document.getElementById('map-info');
-	if (map_info_panel) {
-		map_info_panel.textContent = JSON.stringify(data.reply);
-	}
-}
-
-export {updateHTMLElement};

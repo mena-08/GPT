@@ -1,4 +1,5 @@
 import { quat, mat4, vec3 } from 'gl-matrix';
+import { eventEmitter } from './eventEmitter';
 class Sphere {
     constructor(gl, radius, segments, isInverted = true) {
         this.gl = gl;
@@ -16,6 +17,7 @@ class Sphere {
         this.position = vec3.create();
         this.initGeometry();
         this.initBuffers();
+        eventEmitter.on('textureChange', this.changeTexture.bind(this));
     }
 
     rotate(orientation) {
@@ -55,6 +57,23 @@ class Sphere {
 
     getGLContext(){
         return this.gl;
+    }
+
+    changeTexture(textureUrl) {
+        const gl = this.getGLContext();
+        const texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+
+        const image = new Image();
+        image.onload = () => {
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            gl.generateMipmap(gl.TEXTURE_2D);
+        };
+        image.src = textureUrl;
+
+        // Set the new texture
+        this.texture = texture;
     }
 
     initGeometry() {
@@ -162,10 +181,19 @@ class Sphere {
 
     draw(shaderProgram, viewMatrix, projectionMatrix, texture, bumpMap = null, specularMap=null) {
         const gl = this.gl;
-        gl.useProgram(shaderProgram);
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_texture'), 0);
+        
+        if(texture){
+            gl.useProgram(shaderProgram);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_texture'), 0);
+        }else{
+            gl.useProgram(shaderProgram);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, this.texture);
+            gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_texture'), 0);
+        }
+
 
         if (bumpMap) {
             gl.activeTexture(gl.TEXTURE1);

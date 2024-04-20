@@ -25,7 +25,7 @@ input_field.addEventListener('keypress', handleSendMessage);
 async function sendToAPI(_message, callback) {
 	if (!_message) return;
 	try {
-		const response = await fetch('http://127.0.0.1:5000/chat', {
+		const response = await fetch('/api/chat', {
 			method: 'POST',
 			headers: { 'Content-type': 'application/json', },
 			body: JSON.stringify({
@@ -52,7 +52,7 @@ async function sendToAPI(_message, callback) {
 async function askForMap(_message, callback) {
 	if (!_message) return;
 	try {
-		const response = await fetch('http://127.0.0.1:5000/chat', {
+		const response = await fetch('/api/chat', {
 			method: 'POST',
 			headers: { 'Content-type': 'application/json', },
 			body: JSON.stringify({
@@ -150,8 +150,6 @@ function fetchMapImage(mapName) {
 		// Create a local URL for the image blob
 		const localUrl = URL.createObjectURL(blob);
 		eventEmitter.emit('textureChange', localUrl);
-		//sendToAPI(`Please give me information about a map of ${mapName} from the Earth? This map was retrieved from the NASA GIBS dataset, maybe it will help you to find something useful\n Please answer in a short paragraph and only the information relevant to the map. Please exclude any introduction words like, "sure!", "certainly!", etc. The information is meant for kids of 8 years. Also, don't include the quote characters.`);
-		// console.log(localUrl);
 	})
 	.catch(error => {
 		console.error('Error fetching map image:', error);
