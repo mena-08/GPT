@@ -172,15 +172,11 @@ def get_map_image(map_name):
         print(e)
         abort(500)
         
-@app.route('/get_video/<filename>')
-def get_video(filename):
-    video_dir = './static/streams'
-    #return send_from_directory(video_dir, filename, as_attachment=True, attachment_filename=f"{request.host}/{filename}")
-    return send_from_directory(video_dir, filename)
 
 @app.route('/video/<path:filename>')
 def send_video(filename):
-    return send_from_directory('./static/streams', filename)
+    #return send_from_directory('./static/hurricane_2004', filename)
+    return send_from_directory('./static/atmosphere/water_vapor', filename)
     
 
 if __name__ == '__main__':

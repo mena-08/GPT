@@ -15,7 +15,7 @@ let initialGripPosition = vec3.create();
 
 export async function onEnterXRClicked() {
     try {
-        const session = await navigator.xr.requestSession('immersive-vr', {
+        const session = await navigator.xr.requestSession('immersive-ar', {
             //optionalFeatures: ["depth-sensing", "dom-overlay", "hand-tracking", "hit-test", "layers", "light-estimation", "viewer"]
             optionalFeatures: ["local", "hand-tracking", "depth-sensing", "hit-test", "light-estimation", "transparent"]
         });
@@ -229,9 +229,9 @@ function handleView(view, session) {
     gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
     const viewMatrix = view.transform.inverse.matrix;
     const projectionMatrix = view.projectionMatrix;
-    const positionOnSurface = WGS84ToECEF(19.432601, -99.13342, 0);
-    marker.setPositionOnSphere(positionOnSurface, earthSphere);
+    // const positionOnSurface = WGS84ToECEF(19.432601, -99.13342, 0);
+    // marker.setPositionOnSphere(positionOnSurface, earthSphere);
     earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, videoTexture);
     moonSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, moonTexture);
-    marker.draw(earthShaderProgram, viewMatrix, projectionMatrix);
+    //marker.draw(earthShaderProgram, viewMatrix, projectionMatrix);
 }

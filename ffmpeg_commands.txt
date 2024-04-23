@@ -1,0 +1,11 @@
+
+//COMMAND FOR CONVERTING IT H.264 CODEC
+ffmpeg -i <input_filename>.mp4 -c:v libx264 -preset veryslow -crf 18 -c:a copy <output_filename>.mp4 
+
+//COMMAND FOR MAKING MP4 H.264 FILES INTO .m3u8 FILES WITH THEIR TS FILES IN THE SAME DIRECTORY
+
+ffmpeg -i <input_filename>.mp4 -codec: copy -start_number 0 -hls_time 10 -hls_list_size 0 -f hls <output_filename>.m3u8
+//ffmpeg -i air_traffic_4096.mp4 -c:v libx264 -x264opts "keyint=60:min-keyint=60" -c:a copy -start_number 0 -hls_time 3 -hls_list_size 0 -hls_segment_filename "chunk%03d.ts" -hls_flags delete_segments -f hls air_traffic.m3u8
+
+ffmpeg -i air_traffic_4096.mp4 -codec: copy -start_number 0 -hls_time 3 -hls_list_size 0 -hls_segment_filename "chunk%03d.ts" -hls_flags delete_segments -force_key_frames "expr:gte(t,n_forced*3)" -g 90 -f hls air_traffic.m3u8
+

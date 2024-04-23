@@ -12,11 +12,11 @@ if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
 }
 if ('xr' in navigator) {
     initWebGL();
-    navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
+    navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
         if (supported) {
             const button = document.getElementById('xr-button');
             button.addEventListener('click', onEnterXRClicked);
-            requestMicrophoneAccess();
+            //requestMicrophoneAccess();
         } else {
             const button = document.getElementById('xr-button');
             button.disabled = true;
@@ -49,6 +49,8 @@ if ('xr' in navigator) {
 //https://svs.gsfc.nasa.gov/documents/arch_4.html
 //https://svs.gsfc.nasa.gov/api/30728
 //https://svs.gsfc.nasa.gov/30728/
+
+//https://sphere.ssec.wisc.edu/weathersatellites/
 
 //This query could help us in the future to gather the maps
 //https://gitc.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?SERVICE=WMS&request=GetMap&layers=VIIRS_SNPP_L2_Sea_Surface_Temp_Night&format=image/jpeg&transparent=true&version=1.3.0&width=1024&height=512&crs=EPSG:4326&bbox=-180,-90,180,90

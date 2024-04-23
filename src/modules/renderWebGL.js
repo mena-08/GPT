@@ -39,13 +39,10 @@ async function setup(canvas) {
         return;
     }
 
-    initTextures(gl);
-    initTextureVideo('/api/video/output.m3u8');
-    sep(gl);
-    
+    initTextures(gl);   
     earthShaderProgram = shaderProgramInit(gl, vertexShaderSource, fragmentShaderSource);
 
-    earthSphere = new Sphere(gl, 1, 255, false);
+    earthSphere = new Sphere(gl, 0.6, 255, false);
     moonSphere = new Sphere(gl, 0.27, 100, false);
     moonSphere.translate(1.5, 0, 0);
     marker = new Marker(gl, 0.1, 0.01, 32);
@@ -73,8 +70,13 @@ async function setup(canvas) {
         const projectionMatrix = camera.getProjectionMatrix();
         
         
-        marker.draw(earthShaderProgram, viewMatrix, projectionMatrix);
-        earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, videoTexture, bumpTexture, specularTexture);
+        //marker.draw(earthShaderProgram, viewMatrix, projectionMatrix);
+        if(videoTexture != null){
+            earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, videoTexture, bumpTexture, specularTexture);
+        }else{
+            earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, earthTexture, bumpTexture, specularTexture);
+        }
+
         //earthSphere.setTexture = moonTexture;
         moonSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, moonTexture);
         
@@ -91,9 +93,10 @@ async function initTextures(gl) {
     specularTexture = await loadTexture(gl, specularTexturePath);
     bumpTexture = await loadTexture(gl, bumpTexturePath);
     //loadHighQualityTexture(gl);
+    sep(gl, '/api/video/water_vapor.m3u8');
 }
 
-async function sep(gl,placeholder='/api/video/output.m3u8'){
+async function sep(gl,placeholder){
     videoTexture = await sap(gl,placeholder); 
 }
 
@@ -156,7 +159,6 @@ export {
     earthSphere,
     moonSphere,
     moonTexture,
-    marker, 
     videoTexture, 
     globalVideo, 
     copyVideo

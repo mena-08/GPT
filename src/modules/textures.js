@@ -68,6 +68,7 @@ async function initTextureVideo(url) {
 
 function sap(gl, url) {
     const video = document.createElement('video');
+    video.loop = true;
     video.crossOrigin = 'anonymous';
     video.playsInline = true;
     const texture = gl.createTexture();
@@ -76,7 +77,7 @@ function sap(gl, url) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 255, 255])); // initial blue pixel
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
 
     if (Hls.isSupported()) {
         var hls = new Hls();
