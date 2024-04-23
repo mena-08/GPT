@@ -182,31 +182,24 @@ class Sphere {
     draw(shaderProgram, viewMatrix, projectionMatrix, texture, bumpMap = null, specularMap=null) {
         const gl = this.gl;
         
-        if(texture){
-            gl.useProgram(shaderProgram);
-            gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_texture'), 0);
-        }else{
-            gl.useProgram(shaderProgram);
-            gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, this.texture);
-            gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_texture'), 0);
-        }
+        gl.useProgram(shaderProgram);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_texture'), 0);
 
 
-        if (bumpMap) {
-            gl.activeTexture(gl.TEXTURE1);
-            gl.bindTexture(gl.TEXTURE_2D, bumpMap);
-            gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_bumpMap'), 1);
+        // if (bumpMap) {
+        //     gl.activeTexture(gl.TEXTURE1);
+        //     gl.bindTexture(gl.TEXTURE_2D, bumpMap);
+        //     gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_bumpMap'), 1);
 
-            const bumpMapScale = 0.048;
-            gl.uniform1f(gl.getUniformLocation(shaderProgram, 'u_displacementStrength'), bumpMapScale);
+        //     const bumpMapScale = 0.048;
+        //     gl.uniform1f(gl.getUniformLocation(shaderProgram, 'u_displacementStrength'), bumpMapScale);
 
-            gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_specularMap'), 2);
-            gl.activeTexture(gl.TEXTURE2);
-            gl.bindTexture(gl.TEXTURE_2D, specularMap);
-        }
+        //     gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_specularMap'), 2);
+        //     gl.activeTexture(gl.TEXTURE2);
+        //     gl.bindTexture(gl.TEXTURE_2D, specularMap);
+        // }
 
         //set matrix uniforms
         const uViewMatrixLocation = gl.getUniformLocation(shaderProgram, 'u_viewMatrix');

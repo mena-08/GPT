@@ -2,17 +2,18 @@ import os
 import requests
 from flask_cors import CORS
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify, Response, send_file, abort
+from flask import Flask, request, jsonify, Response, send_file, abort, send_from_directory
 from io import BytesIO
 import cartopy
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 from PIL import Image
+from werkzeug.utils import safe_join
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 CORS(app)
 app.debug = True
 
@@ -170,6 +171,17 @@ def get_map_image(map_name):
     except requests.RequestException as e:
         print(e)
         abort(500)
+        
+@app.route('/get_video/<filename>')
+def get_video(filename):
+    video_dir = './static/streams'
+    #return send_from_directory(video_dir, filename, as_attachment=True, attachment_filename=f"{request.host}/{filename}")
+    return send_from_directory(video_dir, filename)
+
+@app.route('/video/<path:filename>')
+def send_video(filename):
+    return send_from_directory('./static/streams', filename)
+    
 
 if __name__ == '__main__':
     app.run(port=5000)

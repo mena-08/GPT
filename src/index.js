@@ -25,7 +25,7 @@ if ('xr' in navigator) {
         }
     });
 } else {
-    initWebGL();
+    initWebGL();    
     alert('WebXR is not supported');
 }
 

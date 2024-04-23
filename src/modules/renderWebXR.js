@@ -1,4 +1,4 @@
-import { gl, earthShaderProgram, renderSkybox, marker, earthSphere, earthTexture, moonSphere, moonTexture } from './renderWebGL';
+import { gl, earthShaderProgram, renderSkybox, marker, earthSphere, earthTexture, moonSphere, moonTexture, videoTexture } from './renderWebGL';
 import { startRecording, stopRecording, requestMicrophoneAccess } from './audioManager';
 import { quat, vec3 } from 'gl-matrix';
 import { WGS84ToECEF } from './utilities';
@@ -15,7 +15,7 @@ let initialGripPosition = vec3.create();
 
 export async function onEnterXRClicked() {
     try {
-        const session = await navigator.xr.requestSession('immersive-ar', {
+        const session = await navigator.xr.requestSession('immersive-vr', {
             //optionalFeatures: ["depth-sensing", "dom-overlay", "hand-tracking", "hit-test", "layers", "light-estimation", "viewer"]
             optionalFeatures: ["local", "hand-tracking", "depth-sensing", "hit-test", "light-estimation", "transparent"]
         });
@@ -86,7 +86,7 @@ function onSelectStart(event) {
 
     //voice recording start
     if (event.inputSource.handedness === "left") {
-        startRecording(true);
+       // startRecording(true);
     }
     const controllerIndex = controllers.findIndex(controller => controller.inputSource === event.inputSource);
     if (controllerIndex !== -1) {
@@ -96,7 +96,7 @@ function onSelectStart(event) {
 
 function onSelectEnd(event) {
     if (event.inputSource.handedness === "left") {
-        stopRecording();
+        //stopRecording();
     }
     vec3.set(initialGripPosition, 0, 0, 0);
     const controllerIndex = controllers.findIndex(controller => controller.inputSource === event.inputSource);
@@ -231,7 +231,7 @@ function handleView(view, session) {
     const projectionMatrix = view.projectionMatrix;
     const positionOnSurface = WGS84ToECEF(19.432601, -99.13342, 0);
     marker.setPositionOnSphere(positionOnSurface, earthSphere);
-    earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, earthTexture);
+    earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, videoTexture);
     moonSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, moonTexture);
     marker.draw(earthShaderProgram, viewMatrix, projectionMatrix);
 }
