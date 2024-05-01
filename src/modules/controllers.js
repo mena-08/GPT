@@ -40,7 +40,7 @@ document.addEventListener('keyup', function(event) {
 });
 
 function updateCameraPosition(deltaTime) {
-    const speed = 2.0; // Units per second
+    const speed = 2.0;
     camera.position[0] += cameraMovement.right * speed * deltaTime;
     camera.position[2] += cameraMovement.forward * speed * deltaTime;
 
@@ -96,12 +96,12 @@ function onWheel(event) {
         cameraDirection[2] / length
     ];
 
-    //uppdate the camera's position based on the zoom direction and speed
+    //uppdate the camera position based on the zoom direction and speed
     camera.position[0] += cameraDirection[0] * zoomSpeed * zoomDirection;
     camera.position[1] += cameraDirection[1] * zoomSpeed * zoomDirection;
     camera.position[2] += cameraDirection[2] * zoomSpeed * zoomDirection;
 
-    //update the camera's view matrix
+    //update the camera view matrix
     camera.updateViewMatrix();
 }
 

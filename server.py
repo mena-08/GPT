@@ -129,7 +129,6 @@ def get_audio():
     if response.status_code != 200:
         return jsonify({"error": "Error from TTS API", "details": response.text}), response.status_code
     
-    # Create a binary stream response
     return Response(
         response.content, 
         mimetype="audio/opus",
@@ -176,7 +175,7 @@ def get_map_image(map_name):
 @app.route('/video/<path:filename>')
 def send_video(filename):
     #return send_from_directory('./static/hurricane_2004', filename)
-    return send_from_directory('./static/atmosphere/water_vapor', filename)
+    return send_from_directory('./static/atmosphere/air_traffic', filename)
     
 
 if __name__ == '__main__':

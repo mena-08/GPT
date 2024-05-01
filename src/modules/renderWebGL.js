@@ -11,7 +11,7 @@ import fragmentShaderSource from '../shaders/earthFragmentShader.glsl';
 import earthTexturePath from '../images/unused/2kearth.jpg';
 import highQualityEarthTexturePath from '../images/unused/10kBaseMap.jpg';
 import starfieldTexturePath from '../images/unused/starfield4k.png';
-import moonTexturePath from '../images/unused/sun.jpg';
+import moonTexturePath from '../images/unused/moon.jpg';
 import bumpTexturePath from '../images/unused/10kearthbump.jpg';
 import specularTexturePath from '../images/unused/10kearthspecular.jpg';
 //let videoTexturePath2 = new URL('../streaming/output3.mp4', import.meta.url);
@@ -40,10 +40,11 @@ async function setup(canvas) {
     }
 
     initTextures(gl);   
+    sep(gl, '/api/video/air_traffic.m3u8');
     earthShaderProgram = shaderProgramInit(gl, vertexShaderSource, fragmentShaderSource);
 
-    earthSphere = new Sphere(gl, 0.6, 255, false);
-    moonSphere = new Sphere(gl, 0.27, 100, false);
+    earthSphere = new Sphere(gl, 0.4, 255, false);
+    moonSphere = new Sphere(gl, 0.17, 100, false);
     moonSphere.translate(1.5, 0, 0);
     marker = new Marker(gl, 0.1, 0.01, 32);
 
@@ -68,11 +69,9 @@ async function setup(canvas) {
 
         const viewMatrix = camera.getViewMatrix();
         const projectionMatrix = camera.getProjectionMatrix();
-        
-        
-        //marker.draw(earthShaderProgram, viewMatrix, projectionMatrix);
+        //marker.draw(earthShaderProgram, viewMatrix, projectionMatrix);        
         if(videoTexture != null){
-            earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, videoTexture, bumpTexture, specularTexture);
+        earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, videoTexture, bumpTexture, specularTexture);
         }else{
             earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, earthTexture, bumpTexture, specularTexture);
         }
@@ -93,40 +92,19 @@ async function initTextures(gl) {
     specularTexture = await loadTexture(gl, specularTexturePath);
     bumpTexture = await loadTexture(gl, bumpTexturePath);
     //loadHighQualityTexture(gl);
-    sep(gl, '/api/video/water_vapor.m3u8');
+    sep(gl, '/api/video/air_traffic.m3u8');
 }
 
 async function sep(gl,placeholder){
     videoTexture = await sap(gl,placeholder); 
 }
 
-
-// async function initTextureVideo(gl) {
-//     //videoTexture = await loadTextureVideo(gl, '/api/video/output.m3u8');
-//     const video = document.getElementById('myVideo');
-//     if (Hls.isSupported()) {
-//         const hls = new Hls();
-//         // Pointing to the correct API endpoint or static file location
-//         hls.loadSource('/api/video/output.m3u8');
-//         hls.attachMedia(video);
-//         hls.on(Hls.Events.MANIFEST_PARSED, function () {
-//             video.play();
-//             //alert("Manifest Parsed");
-//             //loadTextureVideo(gl, video);
-//         });
-//     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-//         video.src = '/api/video/output.m3u8';
-//         video.addEventListener('loadedmetadata', function () {
-//             video.play();  // For native HLS support like in Safari
-//         });
-//     }
-// }
-
 async function loadHighQualityTexture(gl) {
+
     nextTexture = await loadTexture(gl, highQualityEarthTexturePath);
     setTimeout(() => {
         earthTexture = nextTexture;
-    }, 1000);
+    }, 3000);
 }
 
 function renderSkybox(gl, viewMatrix, projectionMatrix, program) {
@@ -161,5 +139,7 @@ export {
     moonTexture,
     videoTexture, 
     globalVideo, 
-    copyVideo
+    copyVideo,
+    bumpTexture,
+    specularTexture
 };

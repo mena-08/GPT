@@ -1,4 +1,4 @@
-import { gl, earthShaderProgram, renderSkybox, marker, earthSphere, earthTexture, moonSphere, moonTexture, videoTexture } from './renderWebGL';
+import { gl, earthShaderProgram, renderSkybox, bumpTexture, earthSphere, earthTexture, moonSphere, moonTexture, videoTexture, specularTexture } from './renderWebGL';
 import { startRecording, stopRecording, requestMicrophoneAccess } from './audioManager';
 import { quat, vec3 } from 'gl-matrix';
 import { WGS84ToECEF } from './utilities';
@@ -27,8 +27,8 @@ export async function onEnterXRClicked() {
 
 function onSessionStarted(session) {
     // reproduce short audio
-    const soundUrl = require("url:../ready2.mp3");
-    const audio = new Audio(soundUrl);
+    // const soundUrl = require("url:../ready2.mp3");
+    // const audio = new Audio(soundUrl);
     //audio.play();
 
     //create an XRWebGLLayer using the XR Session and my WebGL context
@@ -135,30 +135,6 @@ function handleGestures(gripPose, controller, frame) {
     }
 }
 
-
-function quaternionToEuler(quat) {
-    // Convert quaternion to Euler angles (in radians)
-    // This is a simplified conversion assuming certain axis conventions
-    const x = quat.x, y = quat.y, z = quat.z, w = quat.w;
-    const sinr_cosp = 2 * (w * x + y * z);
-    const cosr_cosp = 1 - 2 * (x * x + y * y);
-    const roll = Math.atan2(sinr_cosp, cosr_cosp);
-
-    const sinp = 2 * (w * y - z * x);
-    let pitch;
-    if (Math.abs(sinp) >= 1) {
-        pitch = Math.sign(sinp) * Math.PI / 2;
-    } else {
-        pitch = Math.asin(sinp);
-    }
-
-    const siny_cosp = 2 * (w * z + x * y);
-    const cosy_cosp = 1 - 2 * (y * y + z * z);
-    const yaw = Math.atan2(siny_cosp, cosy_cosp);
-
-    return { roll, pitch, yaw };
-}
-
 function handleGripPose(gripPose) {
     const gripOrientation = quat.fromValues(
         gripPose.transform.orientation.x,
@@ -183,7 +159,7 @@ function handleGripPose(gripPose) {
 function calculateMovementVector(currentGripPosition) {
     const movementVector = vec3.create();
     vec3.subtract(movementVector, currentGripPosition, initialGripPosition);
-    vec3.scale(movementVector, movementVector, 1.5); // Adjust the scaling factor as needed
+    vec3.scale(movementVector, movementVector, 1.5);
     vec3.add(movementVector, movementVector, spherePosition);
     return movementVector;
 }
@@ -231,7 +207,11 @@ function handleView(view, session) {
     const projectionMatrix = view.projectionMatrix;
     // const positionOnSurface = WGS84ToECEF(19.432601, -99.13342, 0);
     // marker.setPositionOnSphere(positionOnSurface, earthSphere);
-    earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, videoTexture);
+    if(videoTexture != null){
+        earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, videoTexture, bumpTexture, specularTexture);
+        }else{
+            earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, earthTexture, bumpTexture, specularTexture);
+    }
     moonSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, moonTexture);
     //marker.draw(earthShaderProgram, viewMatrix, projectionMatrix);
 }

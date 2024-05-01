@@ -50,7 +50,6 @@ async function initTextureVideo(url) {
     const video = document.getElementById('myVideo');
     if (Hls.isSupported()) {
         const hls = new Hls();
-        // Pointing to the correct API endpoint or static file location
         hls.loadSource(url);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, function () {
@@ -61,7 +60,7 @@ async function initTextureVideo(url) {
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = url;
         video.addEventListener('loadedmetadata', function () {
-            video.play();  // For native HLS support like in Safari
+            video.play(); 
         });
     }
 }

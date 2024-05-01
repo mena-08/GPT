@@ -18,23 +18,18 @@ varying float v_specularMask;
 
 void main() {
     vec3 displacedPosition = a_position;
-  
-    // Sample the bump map
     vec4 bumpColor = texture2D(u_bumpMap, a_texCoord);
     float displacement = bumpColor.r;
-  
+
     float specularMask = texture2D(u_specularMap, a_texCoord).r;
     float wave = sin(a_position.x * 2.0 + u_time) * cos(a_position.z * 2.0 + u_time) * 0.1 * specularMask;
-  
-    // Apply combined displacement to the vertex position
     displacedPosition += a_normal * ((displacement + wave) * u_displacementStrength);
-  
-    // Transform the displaced position
+    
     gl_Position = u_projectionMatrix * u_viewMatrix * u_modelMatrix * vec4(displacedPosition, 1.0);
-  
+
     v_texCoord = a_texCoord;
     v_specularMask = specularMask;
-  
+
     mediump vec3 ambientLight = vec3(0.5, 0.5, 0.5);
     mediump vec3 directionalLightColor = vec3(1, 1, 1);
     mediump vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));

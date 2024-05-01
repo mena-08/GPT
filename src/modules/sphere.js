@@ -171,7 +171,6 @@ class Sphere {
         gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normals), gl.STATIC_DRAW);
 
-        // Store buffer references in the sphere object for later use
         this.buffers.vertexBuffer = vertexBuffer;
         this.buffers.indexBuffer = indexBuffer;
         this.buffers.textureCoordBuffer = textureCoordBuffer;
@@ -188,18 +187,18 @@ class Sphere {
         gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_texture'), 0);
 
 
-        // if (bumpMap) {
-        //     gl.activeTexture(gl.TEXTURE1);
-        //     gl.bindTexture(gl.TEXTURE_2D, bumpMap);
-        //     gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_bumpMap'), 1);
+        if (bumpMap) {
+            gl.activeTexture(gl.TEXTURE1);
+            gl.bindTexture(gl.TEXTURE_2D, bumpMap);
+            gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_bumpMap'), 1);
 
-        //     const bumpMapScale = 0.048;
-        //     gl.uniform1f(gl.getUniformLocation(shaderProgram, 'u_displacementStrength'), bumpMapScale);
+            const bumpMapScale = 0.048;
+            gl.uniform1f(gl.getUniformLocation(shaderProgram, 'u_displacementStrength'), bumpMapScale);
 
-        //     gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_specularMap'), 2);
-        //     gl.activeTexture(gl.TEXTURE2);
-        //     gl.bindTexture(gl.TEXTURE_2D, specularMap);
-        // }
+            gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_specularMap'), 2);
+            gl.activeTexture(gl.TEXTURE2);
+            gl.bindTexture(gl.TEXTURE_2D, specularMap);
+        }
 
         //set matrix uniforms
         const uViewMatrixLocation = gl.getUniformLocation(shaderProgram, 'u_viewMatrix');
@@ -250,18 +249,15 @@ class Sphere {
         if (this.buffers.textureCoordBuffer) gl.deleteBuffer(this.buffers.textureCoordBuffer);
         if (this.buffers.normalBuffer) gl.deleteBuffer(this.buffers.normalBuffer);
     
-        // If you have textures or shader programs specific to this object, delete them as well
         if (this.texture) gl.deleteTexture(this.texture);
         if (this.shaderProgram) {
             gl.deleteProgram(this.shaderProgram);
         }
     
-        // Optionally, reset properties to indicate the object has been destroyed
         this.buffers = {};
         this.texture = null;
         this.shaderProgram = null;
     }
     
-
 }
 export { Sphere };

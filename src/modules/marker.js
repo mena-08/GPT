@@ -49,7 +49,7 @@ class Marker {
     }
 
     setPositionOnSphere(position, sphere){
-        // Calculate direction vector
+        //direction vector
         let direction = vec3.create();
         vec3.subtract(direction, sphere.getPosition(), position);
         vec3.normalize(direction, direction);
@@ -71,13 +71,13 @@ class Marker {
         //translate the marker to the calculated world position
         this.translate(worldPosition[0], worldPosition[1], worldPosition[2]);
 
-        //orient the marker towards the sphere's center
+        //orient the marker towards the sphere center
         let upDirection = vec3.fromValues(0, 1, 0);
         let rotationQuat = quat.create();
         quat.rotationTo(rotationQuat, upDirection, transformedDirection);
         this.rotate(rotationQuat);
 
-        //update the marker's model matrix to apply the translation and rotation
+        //update the marker model matrix to apply the translation and rotation
         this.updateModelMatrix();
     }
 
@@ -92,11 +92,10 @@ class Marker {
 
 
     initGeometry() {
-        // Top point of the cone
         this.vertices.push(0, this.height, 0);
         this.normals.push(0, 1, 0);
 
-        // Base circle vertices and normals
+        //circle vertices and normals
         for (let i = 0; i <= this.segments; i++) {
             const angle = (i / this.segments) * 2 * Math.PI;
             const x = Math.cos(angle) * this.baseRadius;
@@ -109,12 +108,11 @@ class Marker {
             this.normals.push(...normal);
         }
 
-        // Indices for the base
+        //base
         for (let i = 1; i <= this.segments; i++) {
             this.indices.push(0, i, i + 1);
         }
 
-        // Convert arrays to typed arrays
         this.vertices = new Float32Array(this.vertices);
         this.indices = new Uint16Array(this.indices);
         this.normals = new Float32Array(this.normals);
@@ -134,7 +132,6 @@ class Marker {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.normalBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, this.normals, gl.STATIC_DRAW);
 
-        // Vertex count is the length of indices
         this.buffers.vertexCount = this.indices.length;
     }
 
@@ -142,12 +139,12 @@ class Marker {
         const gl = this.gl;
         gl.useProgram(shaderProgram);
 
-        // Set uniforms
+        //uniforms
         gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, 'u_viewMatrix'), false, viewMatrix);
         gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, 'u_projectionMatrix'), false, projectionMatrix);
         gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, 'u_modelMatrix'), false, modelMatrix);
 
-        // Bind and set attributes
+        //bind and set attributes
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.vertexBuffer);
         gl.vertexAttribPointer(gl.getAttribLocation(shaderProgram, 'a_position'), 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(gl.getAttribLocation(shaderProgram, 'a_position'));
