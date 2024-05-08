@@ -44,8 +44,9 @@ def chat():
             #custom model returned from the training >:]
             json={
                 # "model": "ft:gpt-3.5-turbo-1106:personal::8LWjN7Ee",
-                #"model": "gpt-3.5-turbo-1106",
-                "model": "ft:gpt-3.5-turbo-1106:personal::8mUK7i2U",
+                #This one is for navigation
+                #"model": "ft:gpt-3.5-turbo-1106:personal::9LfuG8AD",
+                "model": "ft:gpt-3.5-turbo-1106:personal::9MDIEzZG",
                 "messages": conversation
             }
         )
@@ -145,6 +146,7 @@ def get_map_image(map_name):
     :return: Returns a BLOB response that includes the gpt reply in mp3 format.
     """
     print(map_name)
+    breakpoint()
     if(not map_name or map_name=='None'):
         return jsonify({"error": "Error while fetching the map", "details": "No Map selected from the API"})
     # Base WMS URL for NASA GIBS
@@ -172,11 +174,10 @@ def get_map_image(map_name):
         abort(500)
         
 
-@app.route('/video/<path:filename>')
-def send_video(filename):
-    #return send_from_directory('./static/hurricane_2004', filename)
-    return send_from_directory('./static/atmosphere/air_traffic', filename)
-    
+@app.route('/video/<path:category>/<path:folder>/<path:filename>')
+def send_video(category,folder,filename):
+    directory_path = f'./static/{category}/{folder}'
+    return send_from_directory(directory_path, filename)
 
 if __name__ == '__main__':
     app.run(port=5000)

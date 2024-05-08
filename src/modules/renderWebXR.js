@@ -1,4 +1,4 @@
-import { gl, earthShaderProgram, renderSkybox, bumpTexture, earthSphere, earthTexture, moonSphere, moonTexture, videoTexture, specularTexture } from './renderWebGL';
+import { gl, earthShaderProgram, renderSkybox, bumpTexture, earthSphere, earthTexture, moonSphere, moonTexture, videoTexture, specularTexture, agentSphere, agentShaderProgram } from './renderWebGL';
 import { startRecording, stopRecording, requestMicrophoneAccess } from './audioManager';
 import { quat, vec3 } from 'gl-matrix';
 import { WGS84ToECEF } from './utilities';
@@ -86,7 +86,7 @@ function onSelectStart(event) {
 
     //voice recording start
     if (event.inputSource.handedness === "left") {
-       // startRecording(true);
+        startRecording(true);
     }
     const controllerIndex = controllers.findIndex(controller => controller.inputSource === event.inputSource);
     if (controllerIndex !== -1) {
@@ -96,7 +96,9 @@ function onSelectStart(event) {
 
 function onSelectEnd(event) {
     if (event.inputSource.handedness === "left") {
-        //stopRecording();
+        gesture=false;
+        stopRecording();
+        //gesture=false;
     }
     vec3.set(initialGripPosition, 0, 0, 0);
     const controllerIndex = controllers.findIndex(controller => controller.inputSource === event.inputSource);
@@ -111,26 +113,25 @@ function handleController(controller, frame) {
         if (gripPose) {
             handleGripPose(gripPose);
         }
-    } else if (controller.inputSource.handedness === "left" && !controller.buttonPressed && controller.gripSpace) {
+    } else if (controller.inputSource.handedness === "left" && controller.buttonPressed && controller.gripSpace) {
         const gripPose = frame.getPose(controller.gripSpace, xrReferenceSpace);
         if (gripPose) {
-            //handleGestures(gripPose, controller, frame);
+            handleGestures(true,controller, frame);
         }
     }
 }
-function handleGestures(gripPose, controller, frame) {
-    //const wristOrientation = gripPose.transform.orientation;
-    //const euler = quaternionToEuler(wristOrientation);
-
-    // if (euler.pitch < -Math.PI / 2 * 0.85 && euler.pitch > -Math.PI / 2 * 1.15) {
+function handleGestures(follow,controller, frame) {
+    gesture = follow;
     if(controller.inputSource.hand) {
         const palm = controller.inputSource.hand.get("wrist");
         if (palm) {
             const palmPose = frame.getPose(palm, xrReferenceSpace);
             if (palmPose) {
                 const palmPosition = palmPose.transform.position;
-                moonSphere.translate(palmPosition.x, palmPosition.y+0.2, palmPosition.z);
-            }
+                if(follow){
+                    agentSphere.translate(palmPosition.x, palmPosition.y+0.2, palmPosition.z);
+                }
+            }            
         }
     }
 }
@@ -207,11 +208,13 @@ function handleView(view, session) {
     const projectionMatrix = view.projectionMatrix;
     // const positionOnSurface = WGS84ToECEF(19.432601, -99.13342, 0);
     // marker.setPositionOnSphere(positionOnSurface, earthSphere);
-    if(videoTexture != null){
-        earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, videoTexture, bumpTexture, specularTexture);
-        }else{
-            earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, earthTexture, bumpTexture, specularTexture);
-    }
-    moonSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, moonTexture);
+    
+    earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix);
+    if(gesture){
+        agentSphere.draw(agentShaderProgram, viewMatrix, projectionMatrix);
+    }    
+
+
+    //moonSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, moonTexture);
     //marker.draw(earthShaderProgram, viewMatrix, projectionMatrix);
 }

@@ -5,7 +5,7 @@ class Camera {
         this.position = [0, 0, 0];
         this.target = [0, 0, 0];
         this.up = [0, 1, 0];
-        this.fov = 90;
+        this.fov = 45;
         this.aspectRatio = 1;
         this.near = 0.1;
         this.far = 1000;
@@ -77,6 +77,9 @@ class Camera {
         this.up[1] = y;
         this.up[2] = z;
         this.updateViewMatrix();
+    }
+    zoom(factor){
+        mat4.translate(this.viewMatrix, this.viewMatrix, [0, 0, factor]);
     }
 }
 

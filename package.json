@@ -29,7 +29,7 @@
     "video.js": "^8.10.0"
   },
   "staticFiles": {
-    "staticPath": "src/images/life",
+    "staticPath": "static/",
     "watcherGlob": "**"
   }
 }

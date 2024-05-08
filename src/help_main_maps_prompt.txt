@@ -1,0 +1,8 @@
+atmosphere/aerosol_optical_thickness
+atmosphere/aerosol_particle_radius
+atmosphere/cloud_fraction
+atmosphere/co2_2020
+atmosphere/co2_2023
+atmosphere/rainfall
+atmosphere/solar_insolation
+atmosphere/water_vapor

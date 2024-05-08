@@ -1,7 +1,15 @@
 import { quat, mat4, vec3 } from 'gl-matrix';
 import { eventEmitter } from './eventEmitter';
+import { initialTexture } from './renderWebGL';
+
+//sphere class
+// TEXTURE0 -> main texture
+// TEXTURE1 -> bump map
+// TEXTURE2 -> specular map
+// TEXTURE3 -> overlay texture
+
 class Sphere {
-    constructor(gl, radius, segments, isInverted = true) {
+    constructor(gl, radius, segments, isInverted = true, agent=false) {
         this.gl = gl;
         this.vertices = [];
         this.indices = [];
@@ -9,19 +17,67 @@ class Sphere {
         this.normals = [];
         this.buffers = {};
         this.texture = undefined;
+        this.overlayTexture = undefined;
+        this.bumpTexture = undefined;
+        this.specularTexture = undefined;
         this.radius = radius;
         this.segments = segments;
         this.isInverted = isInverted;
         this.orientation = quat.create();
         this.modelMatrix = mat4.create();
         this.position = vec3.create();
+        this.rotationAxis = vec3.fromValues(0,-1,0);
+        this.rotationSpeed = 0;
+        this.isStopped = false;
         this.initGeometry();
         this.initBuffers();
-        eventEmitter.on('textureChange', this.changeTexture.bind(this));
+        eventEmitter.on('textureChange', this.changeMainTexture.bind(this));
+        eventEmitter.on('textureOverlayChange', this.changeOverlayTexture.bind(this));
+        eventEmitter.on('loadSpecialTextures', this.loadSpecialTextures.bind(this));
     }
 
+    //speak capabilities
+    //-------------------    
     rotate(orientation) {
         this.orientation = orientation;
+    }
+
+    scale(factor){
+        this.radius = this.radius * factor;
+        this.initGeometry();
+        this.initBuffers();
+    }
+
+    stopRotation(){
+        this.isStopped = True;
+    }
+
+    rotateRight(){
+        if(this.isStopped) return;
+        this.rotationAxis = vec3.fromValues(0,1,0);
+        this.rotationSpeed = 0.003;
+        const rotateCallback = () => {
+            const rotationQuat = quat.create();
+            quat.setAxisAngle(rotationQuat, this.rotationAxis, this.rotationSpeed);
+            quat.multiply(this.orientation, this.orientation, rotationQuat);
+            this.updateModelMatrix();
+            requestAnimationFrame(rotateCallback);
+        };
+        rotateCallback();
+    }
+
+    rotateLeft(){
+        if(this.isStopped) return;
+        this.rotationAxis = vec3.fromValues(0,-1,0);
+        this.rotationSpeed = 0.003;
+        const rotateCallback = () => {
+            const rotationQuat = quat.create();
+            quat.setAxisAngle(rotationQuat, this.rotationAxis, this.rotationSpeed);
+            quat.multiply(this.orientation, this.orientation, rotationQuat);
+            this.updateModelMatrix();
+            requestAnimationFrame(rotateCallback);
+        };
+        rotateCallback();
     }
 
     translate(x, y, z) {
@@ -33,7 +89,8 @@ class Sphere {
         quat.identity(this.orientation);
         mat4.identity(this.modelMatrix);
     }
-    
+    //-------------------
+    //speak capabilities
     getRotation() {
         return this.orientation;
     }
@@ -50,7 +107,6 @@ class Sphere {
         mat4.multiply(this.modelMatrix, this.modelMatrix, rotationMatrix);
     }
 
-
     getModelMatrix() {
         return this.modelMatrix;
     }
@@ -59,21 +115,41 @@ class Sphere {
         return this.gl;
     }
 
-    changeTexture(textureUrl) {
-        const gl = this.getGLContext();
-        const texture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, texture);
+    changeMainTexture(texture_loaded, shaderProgram) {
+        const gl = this.gl;
+        this.texture = texture_loaded;
+        gl.useProgram(shaderProgram);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.texture);
+        gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_texture'), 0);
+    }
 
-        const image = new Image();
-        image.onload = () => {
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-            gl.generateMipmap(gl.TEXTURE_2D);
-        };
-        image.src = textureUrl;
+    changeOverlayTexture(texture_loaded, shaderProgram){
+        const gl = this.gl;
+        this.overlayTexture = texture_loaded;
+        gl.useProgram(shaderProgram);
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, this.overlayTexture);
+        gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_overlayTexture'), 3);
+    }
 
-        // Set the new texture
-        this.texture = texture;
+    enableOverlay(value, shaderProgram){
+        const gl = this.gl;
+        gl.useProgram(shaderProgram);
+        gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_enableOverlay'), value);
+    }
+
+    loadSpecialTextures(bumpTextureLoaded, specularTextureLoaded, shaderProgram){
+        const gl = this.gl;
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, bumpTextureLoaded);
+        gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_bumpMap'), 1);
+        const bumpMapScale = 0.048;
+        gl.uniform1f(gl.getUniformLocation(shaderProgram, 'u_displacementStrength'), bumpMapScale);
+
+        gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_specularMap'), 2);
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, specularTextureLoaded);
     }
 
     initGeometry() {
@@ -144,11 +220,9 @@ class Sphere {
 
         this.vertices = vertices;
         this.indices = indices;
-        this.texCoords = new Float32Array(this.texCoords);
-        this.normals = new Float32Array(this.normals);
     }
 
-    initBuffers() {
+    initBuffers(agent=false) {
         const gl = this.gl;
 
         // Vertex Buffer
@@ -167,38 +241,34 @@ class Sphere {
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.texCoords), gl.STATIC_DRAW);
 
         // Normals Buffer
-        const normalBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normals), gl.STATIC_DRAW);
+        if(!agent){
+            const normalBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normals), gl.STATIC_DRAW);
+            this.buffers.normalBuffer = normalBuffer;
+            this.buffers.textureCoordBuffer = textureCoordBuffer;
+        }
 
         this.buffers.vertexBuffer = vertexBuffer;
         this.buffers.indexBuffer = indexBuffer;
-        this.buffers.textureCoordBuffer = textureCoordBuffer;
-        this.buffers.normalBuffer = normalBuffer;
+        
         this.buffers.vertexCount = this.indices.length;
     }
 
-    draw(shaderProgram, viewMatrix, projectionMatrix, texture, bumpMap = null, specularMap=null) {
+    draw(shaderProgram, viewMatrix, projectionMatrix, initialTexture=null) {
         const gl = this.gl;
-        
-        gl.useProgram(shaderProgram);
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_texture'), 0);
-
-
-        if (bumpMap) {
-            gl.activeTexture(gl.TEXTURE1);
-            gl.bindTexture(gl.TEXTURE_2D, bumpMap);
-            gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_bumpMap'), 1);
-
-            const bumpMapScale = 0.048;
-            gl.uniform1f(gl.getUniformLocation(shaderProgram, 'u_displacementStrength'), bumpMapScale);
-
-            gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_specularMap'), 2);
-            gl.activeTexture(gl.TEXTURE2);
-            gl.bindTexture(gl.TEXTURE_2D, specularMap);
+        if(initialTexture){
+            gl.useProgram(shaderProgram);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, initialTexture);
+            gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_texture'), 0);   
+        }else {
+            gl.useProgram(shaderProgram);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, this.texture);
+            gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_texture'), 0);
         }
+        
 
         //set matrix uniforms
         const uViewMatrixLocation = gl.getUniformLocation(shaderProgram, 'u_viewMatrix');
@@ -211,7 +281,9 @@ class Sphere {
 
         gl.uniformMatrix4fv(uViewMatrixLocation, false, viewMatrix);
         gl.uniformMatrix4fv(uProjectionMatrixLocation, false, projectionMatrix);
-        gl.uniformMatrix4fv(uNormalMatrixLocation, false, normalMatrix);
+        if(!this.agent){
+            gl.uniformMatrix4fv(uNormalMatrixLocation, false, normalMatrix);
+        }
 
         //set model matrix
         const modelMatrixLocation = gl.getUniformLocation(shaderProgram, 'u_modelMatrix');
@@ -224,7 +296,6 @@ class Sphere {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.vertexBuffer);
         gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(positionAttributeLocation);
-
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.indexBuffer);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.textureCoordBuffer);
@@ -232,18 +303,24 @@ class Sphere {
         gl.vertexAttribPointer(textureCoordAttributeLocation, 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(textureCoordAttributeLocation);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.normalBuffer);
-        const normalAttributeLocation = gl.getAttribLocation(shaderProgram, 'a_normal');
-        gl.vertexAttribPointer(normalAttributeLocation, 3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(normalAttributeLocation);
+
+        if(!this.agent){
+            
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.normalBuffer);
+            const normalAttributeLocation = gl.getAttribLocation(shaderProgram, 'a_normal');
+            gl.vertexAttribPointer(normalAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(normalAttributeLocation);
+        }
 
         gl.drawElements(gl.TRIANGLES, this.buffers.vertexCount, gl.UNSIGNED_SHORT, 0);
+        // if(this.agent){
+        //     this.rotateRight();
+        // }
     }
 
     destroy() {
         const gl = this.gl;
     
-        // Delete buffers
         if (this.buffers.vertexBuffer) gl.deleteBuffer(this.buffers.vertexBuffer);
         if (this.buffers.indexBuffer) gl.deleteBuffer(this.buffers.indexBuffer);
         if (this.buffers.textureCoordBuffer) gl.deleteBuffer(this.buffers.textureCoordBuffer);

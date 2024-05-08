@@ -1,12 +1,12 @@
 import TWEEN from '@tweenjs/tween.js';
 import { vec3 } from "gl-matrix";
 
-function WGS84ToECEF(lat, long, alt) {
+function WGS84ToECEF(lat, long, R) {
     //first convert the decimal degrees coordinates into radians
     let long_radians = long * (Math.PI / 180);
     let lat_radians = lat * (Math.PI / 180);
 
-    let R = 1;
+    // let R = 1;
     let h = 0;
     let x = (R + h) * Math.cos(lat_radians) * Math.cos(long_radians);
     let y = (R + h) * Math.cos(lat_radians) * Math.sin(long_radians);

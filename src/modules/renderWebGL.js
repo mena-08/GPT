@@ -1,58 +1,80 @@
-import { mat4 } from "gl-matrix";
-import { Sphere } from "./sphere";
-import { loadTexture, initTextureVideo, sap } from "./textures";
-import { shaderProgramInit } from "./loadShaders";
-import { Marker } from "./marker";
-import { WGS84ToECEF } from "./utilities";
+/// General algorithm
+//1. Load the shaders
+//2. Load the textures
+//3. Render the sphere
+//4. Use a low resolution texture
+//5. While the sphere is rendering, load the high resolution texture
+//6. Once the high resolution texture is loaded, switch to it
+//7. Load the overlay texture
+//8. We can switch to any overlay texture
+//9. Switch to any main texture
+//10. Switch to any video texture
+//11. Voice commands to switch overlay textures
+//12. Voice commands to switch main textures
+//13.->NEXT: Voice commands to switch to video textures
+//14. Voice commands to transformations
+//15. Activate virtual agent with the palm of the hand
+//16.->NEXT: Add support to mobile devices with overlay DOM elements (recording, and controls)
+
+import Hls from "hls.js";
 import camera from "./camera";
+import { mat4 } from "gl-matrix";
+import { Marker } from "./marker";
+import { Sphere } from "./sphere";
+import { eventEmitter } from "./eventEmitter";
+import { loadTexture, loadVideoTextureMemory } from "./textures";
+import { shaderProgramInit } from "./loadShaders";
 import { updateCameraPosition, updateCameraOrbit } from "./controllers";
+
 import vertexShaderSource from '../shaders/earthVertexShader.glsl';
 import fragmentShaderSource from '../shaders/earthFragmentShader.glsl';
-import earthTexturePath from '../images/unused/2kearth.jpg';
-import highQualityEarthTexturePath from '../images/unused/10kBaseMap.jpg';
-import starfieldTexturePath from '../images/unused/starfield4k.png';
-import moonTexturePath from '../images/unused/moon.jpg';
-import bumpTexturePath from '../images/unused/10kearthbump.jpg';
-import specularTexturePath from '../images/unused/10kearthspecular.jpg';
-//let videoTexturePath2 = new URL('../streaming/output3.mp4', import.meta.url);
-import Hls from "hls.js";
+import agentVertexShaderSource from '../shaders/agentVertexShader.glsl';
+import agentFragmentShaderSource from '../shaders/agentFragmentShader.glsl';
+import earthTexturePath from '/static/base_textures/base_lowres_map.jpg';
+import highQualityEarthTexturePath from '/static/base_textures/base_map.jpg';
+import moonTexturePath from '/static/base_textures/base_moon.jpg';
+import bumpTexturePath from '/static/base_textures/base_bump.jpg';
+import specularTexturePath from '/static/base_textures/base_specular.jpg';
+import agentTexturePath from "/static/base_textures/agent3.png";
 
+//gl context and future textures
 let gl = null;
+let videoTexture = false;
+let earthSphere, marker, agentSphere; //objects
+let earthShaderProgram, skyboxProgram, agentShaderProgram; //shader programs
+let earthTexture, bumpTexture, specularTexture, starfieldTexture, moonTexture; //textures
+let highResTexture,initialTexture; //temporary textures
 
-let nextTexture, earthTexture, starfieldTexture, moonTexture, bumpTexture, specularTexture; //textures
-let earthSphere, moonSphere, marker; //spheres
-let earthShaderProgram, skyboxProgram; //shader programs
-
-let videoTexture, copyVideo = false; //test
-
-function initWebGL() {
+function initWebGL(mobileDevice=null) {
     const canvas = document.getElementById('webgl-canvas');
     canvas.width = document.body.clientWidth;
     canvas.height = document.body.clientHeight;
     setup(canvas);
 }
 
-async function setup(canvas) {
+async function setup(canvas, mobileDevice=null) {
     gl = canvas.getContext('webgl', { xrCompatible: true, alpha: true });
     if (!gl) {
         alert('WebGL is not supported');
         return;
     }
+    camera.position = [0, 0, 5];
+    let lastTime = 0;
 
-    initTextures(gl);   
-    sep(gl, '/api/video/air_traffic.m3u8');
+    initTextures(gl);
     earthShaderProgram = shaderProgramInit(gl, vertexShaderSource, fragmentShaderSource);
+    agentShaderProgram = shaderProgramInit(gl, agentVertexShaderSource, agentFragmentShaderSource);
 
     earthSphere = new Sphere(gl, 0.4, 255, false);
-    moonSphere = new Sphere(gl, 0.17, 100, false);
-    moonSphere.translate(1.5, 0, 0);
+    agentSphere = new Sphere(gl, 0.07, 100, false, true);
+    agentSphere.rotateRight();
+
+    //earthSphere.scale();
+    
     marker = new Marker(gl, 0.1, 0.01, 32);
-
-    const positionOnSurface = WGS84ToECEF(19.432601, -99.13342, 0);
-    marker.setPositionOnSphere(positionOnSurface, earthSphere);
-
-    camera.position = [0, 0, 3];
-    let lastTime = 0;
+    marker.setPositionOnSphere([40.4637, 3.7492], earthSphere);
+    
+    //console.log(overlayRoutes.timezones);
 
     function animate(now) {
         if (!lastTime) lastTime = now;
@@ -62,24 +84,21 @@ async function setup(canvas) {
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.enable(gl.DEPTH_TEST);
-
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        
         updateCameraPosition(deltaTime);
         updateCameraOrbit(deltaTime);
         camera.updateViewMatrix();
 
         const viewMatrix = camera.getViewMatrix();
         const projectionMatrix = camera.getProjectionMatrix();
-        //marker.draw(earthShaderProgram, viewMatrix, projectionMatrix);        
-        if(videoTexture != null){
-        earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, videoTexture, bumpTexture, specularTexture);
-        }else{
-            earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, earthTexture, bumpTexture, specularTexture);
-        }
-
-        //earthSphere.setTexture = moonTexture;
-        moonSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, moonTexture);
+        //marker.draw(earthShaderProgram, viewMatrix, projectionMatrix);
+        agentSphere.draw(agentShaderProgram, viewMatrix, projectionMatrix);
+        earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, initialTexture);
         
         gl.uniform1f(gl.getUniformLocation(earthShaderProgram, 'u_time'), currentTime);
+        gl.uniform1f(gl.getUniformLocation(agentShaderProgram, 'u_time'), currentTime);
         lastTime = now;
         requestAnimationFrame(animate);
     }
@@ -87,24 +106,68 @@ async function setup(canvas) {
 }
 
 async function initTextures(gl) {
+    //load the lowres texture first
     earthTexture = await loadTexture(gl, earthTexturePath);
-    moonTexture = await loadTexture(gl, moonTexturePath);
+    initialTexture = earthTexture;
     specularTexture = await loadTexture(gl, specularTexturePath);
     bumpTexture = await loadTexture(gl, bumpTexturePath);
-    //loadHighQualityTexture(gl);
-    sep(gl, '/api/video/air_traffic.m3u8');
+    const agentTexture = await loadTexture(gl,agentTexturePath );
+    
+    if(earthTexture){
+        eventEmitter.emit('textureChange', earthTexture, earthShaderProgram);
+        agentSphere.texture = agentTexture;
+        //eventEmitter.emit('textureChange', earthTexture, agentShaderProgram);
+
+        const x = "atmosphere/fim_chem/weather_fimchem_hls.m3u8";
+        //loadVideoTexture(gl,'/api/video/'+x);
+    }
+    if(bumpTexture && specularTexture){
+        //loadHighQualityTexture(gl);
+        //if the low res is loaded, load the high res
+        //eventEmitter.emit('loadSpecialTextures', bumpTexture, specularTexture, earthShaderProgram);
+        //loadMainTexture(gl, testMainTexturePath);
+        //loadHighQualityTexture(gl);
+        //const imgrequired = require.context("/static/overlays/", false, /overlay_air_circulation\.png$/);
+        //loadOverlayTexture(gl, overlayRoutes.capitals);
+    }
+    //sep(gl, '/api/video/air_traffic.m3u8');
 }
 
-async function sep(gl,placeholder){
-    videoTexture = await sap(gl,placeholder); 
+async function loadVideoTexture(gl,placeholder){
+    initialTexture = await loadVideoTextureMemory(gl,placeholder); 
 }
 
 async function loadHighQualityTexture(gl) {
-
-    nextTexture = await loadTexture(gl, highQualityEarthTexturePath);
+    highResTexture = await loadTexture(gl, highQualityEarthTexturePath);
     setTimeout(() => {
-        earthTexture = nextTexture;
-    }, 3000);
+        if (highResTexture){
+            eventEmitter.emit('textureChange', highResTexture, earthShaderProgram);
+            initialTexture = null;
+        }
+        //earthTexture = highResTexture;
+    }, 1000);
+    //loadOverlayTexture(gl, testTexturePath);
+    //loadMainTexture(gl, testMainTexturePath);
+}
+
+async function loadOverlayTexture(gl, path) {
+    const nxtTtext = await loadTexture(gl, path);
+    setTimeout(() => {
+        if (nxtTtext){
+            eventEmitter.emit('textureOverlayChange', nxtTtext, earthShaderProgram);
+            //loadMainTexture(gl, testMainTexturePath);
+        } 
+    }, 1000);
+}
+
+async function loadMainTexture(gl, path) {
+    const nxtTtext2 = await loadTexture(gl, path);
+    setTimeout(() => {
+        if (nxtTtext2){
+            initialTexture = null;
+            eventEmitter.emit('textureChange', nxtTtext2, earthShaderProgram);
+        } 
+    }, 1000);
 }
 
 function renderSkybox(gl, viewMatrix, projectionMatrix, program) {
@@ -135,11 +198,14 @@ export {
     earthTexture,
     starfieldTexture,
     earthSphere,
-    moonSphere,
+    agentSphere,
     moonTexture,
     videoTexture, 
-    globalVideo, 
-    copyVideo,
     bumpTexture,
-    specularTexture
+    specularTexture,
+    agentShaderProgram,
+    initialTexture,
+    loadOverlayTexture,
+    loadMainTexture,
+    loadVideoTexture
 };

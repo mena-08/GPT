@@ -12,10 +12,16 @@ let lastMouseX = null;
 let lastMouseY = null;
 const mouseDelta = { x: 0, y: 0 };
 
+//desktop devices
 document.addEventListener('mousedown', onMouseDown, false);
 document.addEventListener('mouseup', onMouseUp, false);
 document.addEventListener('mousemove', onMouseMove, false);
 
+//mobile devices
+// document.addEventListener('touchstart', handleTouchStart, false);
+// document.addEventListener('touchmove', handleTouchMove, false);
+// document.addEventListener('touchend', handleTouchEnd, false);
+// document.addEventListener('touchcancel', handleTouchEnd, false);
 
 document.addEventListener('keydown', function(event) {
     switch(event.key) {
@@ -129,5 +135,63 @@ function updateCameraOrbit(deltaTime) {
     mouseDelta.y = 0;
     //camera.updateViewMatrix();
 }
+
+
+// let ongoingTouches = [];
+
+// function handleTouchStart(event) {
+//     event.preventDefault();
+//     const touches = event.changedTouches;
+
+//     for (let i = 0; i < touches.length; i++) {
+//         ongoingTouches.push(copyTouch(touches[i]));
+//         if (ongoingTouches.length == 1) {
+//             lastMouseX = touches[i].pageX;
+//             lastMouseY = touches[i].pageY;
+//             isMouseDown = true; // Start dragging
+//         } else if (ongoingTouches.length == 2) {
+//             // Setup for pinch zoom
+//             setupPinchZoom(ongoingTouches);
+//         }
+//     }
+// }
+
+// function handleTouchMove(event) {
+//     event.preventDefault();
+//     const touches = event.changedTouches;
+
+//     if (ongoingTouches.length == 1) {
+//         const deltaX = touches[0].pageX - lastMouseX;
+//         const deltaY = touches[0].pageY - lastMouseY;
+
+//         mouseDelta.x += deltaX;
+//         mouseDelta.y += deltaY;
+
+//         lastMouseX = touches[0].pageX;
+//         lastMouseY = touches[0].pageY;
+//     } else if (ongoingTouches.length >= 2) {
+//         // Handle pinch zoom
+//         updatePinchZoom(ongoingTouches);
+//     }
+// }
+
+// function handleTouchEnd(event) {
+//     event.preventDefault();
+//     const touches = event.changedTouches;
+
+//     for (let i = 0; i < touches.length; i++) {
+//         const idx = ongoingTouches.findIndex(t => t.identifier === touches[i].identifier);
+//         if (idx >= 0) {
+//             ongoingTouches.splice(idx, 1); // Remove touch point
+//         }
+//     }
+//     if (ongoingTouches.length < 1) {
+//         isMouseDown = false; // Stop dragging
+//     }
+// }
+
+// function copyTouch(touch) {
+//     return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY };
+// }
 
 export { updateCameraPosition, updateCameraOrbit};

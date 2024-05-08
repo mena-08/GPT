@@ -12,11 +12,11 @@ if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
 }
 if ('xr' in navigator) {
     initWebGL();
-    navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
+    navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
         if (supported) {
             const button = document.getElementById('xr-button');
             button.addEventListener('click', onEnterXRClicked);
-            //requestMicrophoneAccess();
+            requestMicrophoneAccess();
         } else {
             const button = document.getElementById('xr-button');
             button.disabled = true;
@@ -25,7 +25,8 @@ if ('xr' in navigator) {
         }
     });
 } else {
-    initWebGL();    
+    initWebGL();
+    requestMicrophoneAccess();
     alert('WebXR is not supported');
 }
 

@@ -1,4 +1,5 @@
 import { quat, mat4, vec3 } from 'gl-matrix';
+import { WGS84ToECEF } from './utilities';
 
 class Marker {
     constructor(gl, height = 1, baseRadius = 0.5, segments = 32) {
@@ -48,7 +49,8 @@ class Marker {
         return this.gl;
     }
 
-    setPositionOnSphere(position, sphere){
+    setPositionOnSphere(coordinates, sphere){
+        let position = WGS84ToECEF(coordinates[0], coordinates[1], sphere.radius);
         //direction vector
         let direction = vec3.create();
         vec3.subtract(direction, sphere.getPosition(), position);
@@ -88,8 +90,6 @@ class Marker {
         mat4.fromQuat(rotationMatrix, this.orientation);
         mat4.multiply(this.modelMatrix, this.modelMatrix, rotationMatrix);
     }
-
-
 
     initGeometry() {
         this.vertices.push(0, this.height, 0);

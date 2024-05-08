@@ -19,10 +19,10 @@ function loadTexture(gl, url) {
         const border = 0;
         const srcFormat = gl.RGBA;
         const srcType = gl.UNSIGNED_BYTE;
-        const pixel = new Uint8Array([0, 0, 255, 255]);
+        const pixel = new Uint8Array([30, 30, 30, 255]);
         gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, srcType, pixel);
 
-        const image = new Image();
+        const image = new Image();  
         image.onload = function() {
             gl.bindTexture(gl.TEXTURE_2D, texture);
             gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
@@ -34,7 +34,7 @@ function loadTexture(gl, url) {
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             }
-
+            
             resolve(texture);
         };
         image.onerror = reject;
@@ -42,30 +42,7 @@ function loadTexture(gl, url) {
     });
 }
 
-async function initTextureVideo(url) {
-    //videoTexture = await loadTextureVideo(gl, '/api/video/output.m3u8');
-
-
-
-    const video = document.getElementById('myVideo');
-    if (Hls.isSupported()) {
-        const hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, function () {
-            video.play();
-            //alert("Manifest Parsed");
-            //loadTextureVideo(gl, video);
-        });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = url;
-        video.addEventListener('loadedmetadata', function () {
-            video.play(); 
-        });
-    }
-}
-
-function sap(gl, url) {
+function loadVideoTextureMemory(gl, url) {
     const video = document.createElement('video');
     video.loop = true;
     video.crossOrigin = 'anonymous';
@@ -112,4 +89,4 @@ function isPowerOf2(value) {
     return (value & (value - 1)) === 0;
 }
 
-export { loadTexture, initTextureVideo, sap };
+export { loadTexture, loadVideoTextureMemory };

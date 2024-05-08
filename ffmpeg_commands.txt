@@ -9,3 +9,8 @@ ffmpeg -i <input_filename>.mp4 -codec: copy -start_number 0 -hls_time 10 -hls_li
 
 ffmpeg -i air_traffic_4096.mp4 -codec: copy -start_number 0 -hls_time 3 -hls_list_size 0 -hls_segment_filename "chunk%03d.ts" -hls_flags delete_segments -force_key_frames "expr:gte(t,n_forced*3)" -g 90 -f hls air_traffic.m3u8
 
+ffmpeg -i sos_water.mp4 -c:v libx264 -x264opts opencl -preset slow -crf 15 -c:a copy sos_water_h264.mp4
+
+ffmpeg -i sos_water_h264.mp4 -codec: copy -start_number 0 -hls_time 2 -hls_list_size 0 -hls_segment_filename "chunk%03d.ts" -hls_flags delete_segments -force_key_frames "expr:gte(t,n_forced*2)" -g 60 -f hls sos_water_hls.m3u8
+
+ffmpeg -i <input_filename>_h264.mp4 -codec: copy -start_number 0 -hls_time 2 -hls_list_size 0 -hls_segment_filename "chunk%03d.ts" -hls_flags delete_segments -force_key_frames "expr:gte(t,n_forced*2)" -g 60 -f hls <output_filename>_hls.m3u8

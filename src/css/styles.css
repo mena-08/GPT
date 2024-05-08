@@ -47,3 +47,35 @@ html, body {
     border-radius: 10px;
     font-size: 200%;
 }
+
+.data-button {
+    background-color: #333; 
+    color: white;
+    border: none;
+    padding: 8px 16px; 
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+
+    width: 80%;
+    height: 40%;
+    box-sizing: border-box;  
+    margin-bottom: 5px; 
+}
+
+.data-button:hover {
+    background-color: #555;
+}
+
+.button-icon {
+    width: 80%;
+    height: 20px;
+    margin-right: 10px; 
+}
+
+.data-button span {
+    display: block;
+    text-align: left;
+}

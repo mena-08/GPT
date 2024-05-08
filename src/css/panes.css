@@ -22,3 +22,21 @@
     opacity: 0;
     visibility: hidden;
 }
+
+.menu-maps-panel {
+    background-color: hsl(230, 7%, 70%, 0.8); 
+    width: 250px;
+    border-radius: 10px;
+    padding: 10px;
+    position: absolute;
+    top: 3%; 
+    left: 3%;
+    z-index: 10;
+    height: 100px; 
+    overflow-y: auto;  
+}
+
+.menu-maps-panel.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
