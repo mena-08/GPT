@@ -1,6 +1,6 @@
 import { quat, mat4, vec3 } from 'gl-matrix';
-import { eventEmitter } from './eventEmitter';
-import { initialTexture } from './renderWebGL';
+import { eventEmitter } from './event-emitter';
+import { initialTexture } from './render-webgl';
 
 //sphere class
 // TEXTURE0 -> main texture
@@ -29,6 +29,9 @@ class Sphere {
         this.rotationAxis = vec3.fromValues(0,-1,0);
         this.rotationSpeed = 0;
         this.isStopped = false;
+        this.agent = agent;
+        this.shaderName = null;
+
         this.initGeometry();
         this.initBuffers();
         eventEmitter.on('textureChange', this.changeMainTexture.bind(this));
@@ -139,6 +142,10 @@ class Sphere {
         gl.uniform1i(gl.getUniformLocation(shaderProgram, 'u_enableOverlay'), value);
     }
 
+    setShaderName(shaderName){
+        this.shaderName = shaderName;
+    }
+
     loadSpecialTextures(bumpTextureLoaded, specularTextureLoaded, shaderProgram){
         const gl = this.gl;
         gl.activeTexture(gl.TEXTURE1);
@@ -159,9 +166,9 @@ class Sphere {
         const thetaEnd = Math.PI;
 
         const numVertices = (this.segments + 1) * (this.segments + 1);
-        const numIndices = this.segments * this.segments * 6;
+        const numIndices = this.segments * this.segments * 10;
 
-        const vertices = new Float32Array(numVertices * 3);
+        const vertices = new Float32Array(numVertices * 10);
         const indices = new Uint16Array(numIndices);
 
         let vertexIndex = 0;
@@ -305,7 +312,6 @@ class Sphere {
 
 
         if(!this.agent){
-            
             gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.normalBuffer);
             const normalAttributeLocation = gl.getAttribLocation(shaderProgram, 'a_normal');
             gl.vertexAttribPointer(normalAttributeLocation, 3, gl.FLOAT, false, 0, 0);
@@ -313,9 +319,6 @@ class Sphere {
         }
 
         gl.drawElements(gl.TRIANGLES, this.buffers.vertexCount, gl.UNSIGNED_SHORT, 0);
-        // if(this.agent){
-        //     this.rotateRight();
-        // }
     }
 
     destroy() {

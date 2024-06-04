@@ -36,9 +36,9 @@ html, body {
     opacity: 0.8;
     background: black; 
     border-radius: 15px; 
-    /* padding: 5px; */
     z-index: 1000; 
 }
+
 #xr-button {
     display: block;
     width: 200px;

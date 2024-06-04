@@ -1,7 +1,4 @@
 {
   "extends": "@parcel/config-default",
   "resolvers": ["@parcel/resolver-glob", "..."]
-  // "transformers": {
-  //   "*.mp4": ["@parcel/transformer-raw", "..."]
-  // }
 }

@@ -39,18 +39,12 @@ def process_videos(root_dir):
         for file in files:
             if file.endswith('.mp4'):
                 input_filepath = os.path.join(subdir, file)
-                base_filename = file[:-4]  # Remove .mp4 extension
+                base_filename = file[:-4]
                 output_h264 = os.path.join(subdir, f"{base_filename}_h264.mp4")
                 output_hls = os.path.join(subdir, f"{base_filename}_hls.m3u8")
 
-                # Perform reencoding to h.264
                 reencode_to_h264(input_filepath, output_h264)
-
-                # Convert to HLS
                 convert_to_hls(output_h264, output_hls)
-
-                # Optionally, you can remove the h264 file after HLS conversion
-                # os.remove(output_h264)
 
 if __name__ == "__main__":
     process_videos("atmosphere")

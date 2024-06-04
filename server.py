@@ -46,7 +46,8 @@ def chat():
                 # "model": "ft:gpt-3.5-turbo-1106:personal::8LWjN7Ee",
                 #This one is for navigation
                 #"model": "ft:gpt-3.5-turbo-1106:personal::9LfuG8AD",
-                "model": "ft:gpt-3.5-turbo-1106:personal::9MDIEzZG",
+                #"model": "ft:gpt-3.5-turbo-1106:personal::9MDIEzZG",
+                "model":"gpt-4o-2024-05-13",
                 "messages": conversation
             }
         )

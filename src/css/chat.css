@@ -9,7 +9,6 @@
     resize: both; 
     overflow: auto; 
     max-width: 60%; 
-    /* max-height: 60%;  */
 }
 
 #chat-box {
@@ -26,6 +25,8 @@
     padding: 10px;
     background: #e1e1e1;
     border-bottom: 2px solid #d1d1d1;
+    overflow-y: scroll;
+    scroll-behavior: smooth;
 }
 
 .message-bubble {
@@ -38,7 +39,6 @@
     word-wrap: break-word;
 }
 
-/*blue background for bubbles*/
 .message-bubble-GPT {
     padding: 10px;
     margin: 5px;

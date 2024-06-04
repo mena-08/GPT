@@ -1,5 +1,6 @@
 import { quat, mat4, vec3 } from 'gl-matrix';
 import { WGS84ToECEF } from './utilities';
+import { eventEmitter } from './event-emitter';
 
 class Marker {
     constructor(gl, height = 1, baseRadius = 0.5, segments = 32) {
@@ -16,6 +17,7 @@ class Marker {
         this.orientation = quat.create();
         this.initGeometry();
         this.initBuffers();
+        eventEmitter.on('placeMarker', this.setPositionOnSphere.bind(this));
     }
 
     rotate(orientation) {
@@ -51,6 +53,7 @@ class Marker {
 
     setPositionOnSphere(coordinates, sphere){
         let position = WGS84ToECEF(coordinates[0], coordinates[1], sphere.radius);
+        console.log(position); 
         //direction vector
         let direction = vec3.create();
         vec3.subtract(direction, sphere.getPosition(), position);

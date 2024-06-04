@@ -1,8 +1,8 @@
 // actual values for audio files
-import { displayUserMessage, displayGPTMessage, sendToAPI, conversationHistory, askForMap, fetchMapImage, sendMessage } from '../modules/chatManager';
-import { eventEmitter } from './eventEmitter';
+import { displayUserMessage, displayGPTMessage, sendToAPI, conversationHistory, askForMap, fetchMapImage, sendMessage } from './chat-manager';
+import { eventEmitter } from './event-emitter';
 import help_map_prompts from "bundle-text:../help_map_prompts.txt"
-import { reproduceAudio } from '../modules/chatManager';
+import { reproduceAudio } from './chat-manager';
 
 let media_recorder;
 let audio_chunks = [];

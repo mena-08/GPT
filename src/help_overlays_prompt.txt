@@ -16,4 +16,5 @@ rivers_new
 roads
 state_borders
 timezones
-
+country_borders_black
+continent_borders_black

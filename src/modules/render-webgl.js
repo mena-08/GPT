@@ -11,28 +11,31 @@
 //10. Switch to any video texture
 //11. Voice commands to switch overlay textures
 //12. Voice commands to switch main textures
-//13.->NEXT: Voice commands to switch to video textures
+//13. Voice commands to switch to video textures
 //14. Voice commands to transformations
 //15. Activate virtual agent with the palm of the hand
 //16.->NEXT: Add support to mobile devices with overlay DOM elements (recording, and controls)
 
-import Hls from "hls.js";
+//TODO: Refactor so we can have a one scene and we can add elements to it
+
+import Scene from "./scene";
 import camera from "./camera";
-import { mat4 } from "gl-matrix";
 import { Marker } from "./marker";
 import { Sphere } from "./sphere";
-import { eventEmitter } from "./eventEmitter";
+import { eventEmitter } from "./event-emitter";
 import { loadTexture, loadVideoTextureMemory } from "./textures";
-import { shaderProgramInit } from "./loadShaders";
+import { shaderProgramInit } from "./load-shaders";
 import { updateCameraPosition, updateCameraOrbit } from "./controllers";
 
-import vertexShaderSource from '../shaders/earthVertexShader.glsl';
-import fragmentShaderSource from '../shaders/earthFragmentShader.glsl';
-import agentVertexShaderSource from '../shaders/agentVertexShader.glsl';
-import agentFragmentShaderSource from '../shaders/agentFragmentShader.glsl';
+import vertexShaderSource from '../shaders/earthVertexShader.vert';
+import agentVertexShaderSource from '../shaders/agentVertexShader.vert';
+
+import fragmentShaderSource from '../shaders/earthFragmentShader.frag';
+import agentFragmentShaderSource from '../shaders/agentFragmentShader.frag';
+
 import earthTexturePath from '/static/base_textures/base_lowres_map.jpg';
 import highQualityEarthTexturePath from '/static/base_textures/base_map.jpg';
-import moonTexturePath from '/static/base_textures/base_moon.jpg';
+
 import bumpTexturePath from '/static/base_textures/base_bump.jpg';
 import specularTexturePath from '/static/base_textures/base_specular.jpg';
 import agentTexturePath from "/static/base_textures/agent3.png";
@@ -41,19 +44,20 @@ import agentTexturePath from "/static/base_textures/agent3.png";
 let gl = null;
 let videoTexture = false;
 let earthSphere, marker, agentSphere; //objects
-let earthShaderProgram, skyboxProgram, agentShaderProgram; //shader programs
-let earthTexture, bumpTexture, specularTexture, starfieldTexture, moonTexture; //textures
-let highResTexture,initialTexture; //temporary textures
+let earthShaderProgram, agentShaderProgram; //shader programs
+let earthTexture, bumpTexture, specularTexture, moonTexture; //textures
+let highResTexture, initialTexture; //temporary textures
 
-function initWebGL(mobileDevice=null) {
+function initWebGL() {
     const canvas = document.getElementById('webgl-canvas');
     canvas.width = document.body.clientWidth;
     canvas.height = document.body.clientHeight;
     setup(canvas);
 }
 
-async function setup(canvas, mobileDevice=null) {
+async function setup(canvas) {
     gl = canvas.getContext('webgl', { xrCompatible: true, alpha: true });
+    gl.viewport(0, 0, canvas.width, canvas.height);
     if (!gl) {
         alert('WebGL is not supported');
         return;
@@ -70,40 +74,76 @@ async function setup(canvas, mobileDevice=null) {
     agentSphere.rotateRight();
 
     //earthSphere.scale();
-    
+
     marker = new Marker(gl, 0.1, 0.01, 32);
-    marker.setPositionOnSphere([40.4637, 3.7492], earthSphere);
-    
+    // marker.setPositionOnSphere([40.4637, 3.7492], earthSphere);
+
     //console.log(overlayRoutes.timezones);
 
     function animate(now) {
         if (!lastTime) lastTime = now;
         const deltaTime = (now - lastTime) / 1000;
-        let currentTime = now * 0.001; 
-        
+        let currentTime = now * 0.001;
+
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.enable(gl.DEPTH_TEST);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-        
+
         updateCameraPosition(deltaTime);
         updateCameraOrbit(deltaTime);
         camera.updateViewMatrix();
 
         const viewMatrix = camera.getViewMatrix();
         const projectionMatrix = camera.getProjectionMatrix();
-        //marker.draw(earthShaderProgram, viewMatrix, projectionMatrix);
+        marker.draw(earthShaderProgram, viewMatrix, projectionMatrix);
         agentSphere.draw(agentShaderProgram, viewMatrix, projectionMatrix);
         earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, initialTexture);
-        
+
         gl.uniform1f(gl.getUniformLocation(earthShaderProgram, 'u_time'), currentTime);
-        gl.uniform1f(gl.getUniformLocation(agentShaderProgram, 'u_time'), currentTime);
+        //gl.uniform1f(gl.getUniformLocation(agentShaderProgram, 'u_time'), currentTime);
         lastTime = now;
         requestAnimationFrame(animate);
     }
     requestAnimationFrame(animate);
 }
+
+// async function setup(canvas) {
+//     const gl = canvas.getContext('webgl', { xrCompatible: true, alpha: true });
+//     if (!gl) {
+//         alert('WebGL is not supported');
+//         return;
+//     }
+
+//     const scene = new Scene(gl);
+//     camera.position = [0, 0, 5];
+
+//     // Initialize Shaders
+//     scene.addShader('earthShader', vertexShaderSource, fragmentShaderSource);
+//     scene.addShader('agentShader', agentVertexShaderSource, agentFragmentShaderSource);
+
+//     // Initialize Objects
+//     const earthSphere = new Sphere(gl, 0.4, 255, false);
+//     const agentSphere = new Sphere(gl, 0.07, 100, false, true);
+//     agentSphere.shaderName = 'agentShader';
+//     earthSphere.shaderName = 'earthShader';
+
+//     scene.addObject(earthSphere);
+//     scene.addObject(agentSphere);
+
+//     const marker = new Marker(gl, 0.1, 0.01, 32);
+//     marker.shaderName = 'earthShader';
+//     scene.addObject(marker);
+
+//     function animate(now) {
+//         requestAnimationFrame(animate);
+//         scene.draw();
+//     }
+
+//     requestAnimationFrame(animate);
+// }
+
 
 async function initTextures(gl) {
     //load the lowres texture first
@@ -111,37 +151,30 @@ async function initTextures(gl) {
     initialTexture = earthTexture;
     specularTexture = await loadTexture(gl, specularTexturePath);
     bumpTexture = await loadTexture(gl, bumpTexturePath);
-    const agentTexture = await loadTexture(gl,agentTexturePath );
-    
-    if(earthTexture){
+    const agentTexture = await loadTexture(gl, agentTexturePath);
+
+    if (earthTexture) {
         eventEmitter.emit('textureChange', earthTexture, earthShaderProgram);
         agentSphere.texture = agentTexture;
-        //eventEmitter.emit('textureChange', earthTexture, agentShaderProgram);
-
-        const x = "atmosphere/fim_chem/weather_fimchem_hls.m3u8";
-        //loadVideoTexture(gl,'/api/video/'+x);
     }
-    if(bumpTexture && specularTexture){
-        //loadHighQualityTexture(gl);
+    if (bumpTexture && specularTexture) {
+        loadHighQualityTexture(gl);
         //if the low res is loaded, load the high res
         //eventEmitter.emit('loadSpecialTextures', bumpTexture, specularTexture, earthShaderProgram);
-        //loadMainTexture(gl, testMainTexturePath);
-        //loadHighQualityTexture(gl);
-        //const imgrequired = require.context("/static/overlays/", false, /overlay_air_circulation\.png$/);
-        //loadOverlayTexture(gl, overlayRoutes.capitals);
     }
-    //sep(gl, '/api/video/air_traffic.m3u8');
 }
 
-async function loadVideoTexture(gl,placeholder){
-    initialTexture = await loadVideoTextureMemory(gl,placeholder); 
+async function loadVideoTexture(gl, placeholder) {
+    initialTexture = await loadVideoTextureMemory(gl, placeholder);
 }
 
 async function loadHighQualityTexture(gl) {
     highResTexture = await loadTexture(gl, highQualityEarthTexturePath);
+    const agentTexture = await loadTexture(gl, agentTexturePath);
     setTimeout(() => {
-        if (highResTexture){
+        if (highResTexture) {
             eventEmitter.emit('textureChange', highResTexture, earthShaderProgram);
+            agentSphere.texture = agentTexture;
             initialTexture = null;
         }
         //earthTexture = highResTexture;
@@ -153,59 +186,54 @@ async function loadHighQualityTexture(gl) {
 async function loadOverlayTexture(gl, path) {
     const nxtTtext = await loadTexture(gl, path);
     setTimeout(() => {
-        if (nxtTtext){
+        if (nxtTtext) {
             eventEmitter.emit('textureOverlayChange', nxtTtext, earthShaderProgram);
             //loadMainTexture(gl, testMainTexturePath);
-        } 
+        }
+    }, 1000);
+}
+
+async function placeMarker(coordinates) {
+    setTimeout(() => {
+        eventEmitter.emit('placeMarker', coordinates, earthSphere);
     }, 1000);
 }
 
 async function loadMainTexture(gl, path) {
     const nxtTtext2 = await loadTexture(gl, path);
     setTimeout(() => {
-        if (nxtTtext2){
+        if (nxtTtext2) {
             initialTexture = null;
             eventEmitter.emit('textureChange', nxtTtext2, earthShaderProgram);
-        } 
+        }
     }, 1000);
 }
 
-function renderSkybox(gl, viewMatrix, projectionMatrix, program) {
-    gl.useProgram(program);
-
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, starfieldTexture);
-    gl.uniform1i(gl.getUniformLocation(program, 'u_texture'), 0);
-
-    const viewMatrixNoTranslation = mat4.clone(viewMatrix);
-    viewMatrixNoTranslation[12] = 0;
-    viewMatrixNoTranslation[13] = 0;
-    viewMatrixNoTranslation[14] = 0;
-
-    setMatrixUniforms(gl, program, viewMatrixNoTranslation, projectionMatrix);
-
-    drawSphere(gl, program, skyboxSphereBuffers, false);
+function onWindowResize() {
+    const canvas = document.getElementById('webgl-canvas');
+    canvas.width = document.body.clientWidth;
+    canvas.height = document.body.clientHeight;
+    camera.setViewport(canvas.width, canvas.height);
 }
 
+window.addEventListener('resize', onWindowResize);
+onWindowResize();
+
 export {
-    initWebGL,
-    renderEarth,
-    renderSkybox,
     gl,
     earthShaderProgram,
-    skyboxProgram,
-    text,
     earthTexture,
-    starfieldTexture,
     earthSphere,
     agentSphere,
     moonTexture,
-    videoTexture, 
+    videoTexture,
     bumpTexture,
     specularTexture,
     agentShaderProgram,
     initialTexture,
+    initWebGL,
     loadOverlayTexture,
     loadMainTexture,
-    loadVideoTexture
+    loadVideoTexture,
+    placeMarker
 };

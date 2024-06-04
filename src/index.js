@@ -1,34 +1,55 @@
 //import all the libraries/images needed, as Parcel needs to know about them
-//import './modules/chatManager';
-
-//import './modules/audioManager';
 import './modules/utilities';
-import { initWebGL } from './modules/renderWebGL';
-import { onEnterXRClicked } from './modules/renderWebXR';
-import { requestMicrophoneAccess } from './modules/audioManager';
+import { initWebGL } from './modules/render-webgl';
+import { onEnterXRClicked } from './modules/render-webxr';
+import { requestMicrophoneAccess } from './modules/audio-manager';
 
-if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    alert("Your browser does not support audio recording.");
+let is_mobile = false;
+
+function detectDevice() {
+    const user_agent = navigator.userAgent || window.opera;
+    const is_Android = /android/i.test(user_agent);
+    const is_IOS = /iPad|iPhone|iPod/.test(user_agent) && !window.MSStream;
+
+    if (is_Android || is_IOS) {
+        is_mobile = true;
+    }
 }
-if ('xr' in navigator) {
+
+function initialize() {
+    detectDevice();
     initWebGL();
+    checkMicrophoneSupport();
+
+    if ('xr' in navigator) {
+        checkVRSessions();
+    } else {
+        alert('WebXR is not supported for this browser.');
+        requestMicrophoneAccess();
+    }
+}
+
+function checkMicrophoneSupport() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert("Your browser does not support audio recording.");
+    }
+    requestMicrophoneAccess();
+}
+
+function checkVRSessions() {
     navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
+        const button = document.getElementById('xr-button');
         if (supported) {
-            const button = document.getElementById('xr-button');
-            button.addEventListener('click', onEnterXRClicked);
-            requestMicrophoneAccess();
+            button.addEventListener('click', () => onEnterXRClicked(true));
         } else {
-            const button = document.getElementById('xr-button');
             button.disabled = true;
             button.style.display = 'none';
-            alert('Immersive VR is not supported');
+            alert('Immersive VR/AR is not supported');
         }
     });
-} else {
-    initWebGL();
-    requestMicrophoneAccess();
-    alert('WebXR is not supported');
 }
+
+document.addEventListener('DOMContentLoaded', initialize);
 
 // https://en.wikipedia.org/wiki/Web_Map_Service
 
@@ -46,7 +67,6 @@ if ('xr' in navigator) {
 //anisotropy
 //https://sbcode.net/threejs/anisotropic/
 
-//
 //https://svs.gsfc.nasa.gov/documents/arch_4.html
 //https://svs.gsfc.nasa.gov/api/30728
 //https://svs.gsfc.nasa.gov/30728/

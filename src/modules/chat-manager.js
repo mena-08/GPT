@@ -1,10 +1,9 @@
-import { eventEmitter } from "./eventEmitter";
+import { eventEmitter } from "./event-emitter";
 import help_map_prompts from "bundle-text:../help_map_prompts.txt"
 import help_main_map_prompts from "bundle-text:../help_main_maps_prompt.txt"
 import help_overlays_prompts from "bundle-text:../help_overlays_prompt.txt"
 import help_video_maps_prompt from "bundle-text:../help_video_maps_prompt.txt"
-import { isPlayingResponse } from "./audioManager";
-import { gl, earthSphere, moonTexture, earthTexture, loadOverlayTexture, loadMainTexture, loadVideoTexture} from "./renderWebGL";
+import { gl, earthSphere, moonTexture, earthTexture, loadOverlayTexture, loadMainTexture, loadVideoTexture, placeMarker} from "./render-webgl";
 import overlayRoutes from "/static/overlays/*.png";
 import atmosphereRoutes from "/static/atmosphere/base_images/*.png";
 // const oceanContext = require.context("/static/atmosphere", true, /\.m3u8$/);
@@ -12,18 +11,19 @@ import atmosphereRoutes from "/static/atmosphere/base_images/*.png";
 let conversationHistory = [
 	{
 		"role": "system", "content": "You are an interactive 3D Earth visualization tool. Your primary task is to identify the type of prompt into the following ones\
-		Navigation: if we are talking or inferring that you show or take us to a place on earth, either directly or directly.\
+		Navigation: if we are talking or inferring that you show or take us to a place on earth, either directly or directly. You will reply with the coordinates of the place in this form \
+		navigation->(40.4637, 3.7492) , so if you infer that we are talking from a specific place on earth, give us the coordinates. \
 		Transformation: if we are asking about rotating or moving the earth for better visuals, must include the direction we are talking about. format: transformation->rotate right, format: transformation->scale up, etc\
 		Information: if we want to know more about the place we are talking about, with different facts.\
 		Maps: if we are talking or inferring directly or indirectly about natural phenomena that occurs on earth either natural or caused by humans, it will be related to earth in general,\
-		then you will be provided of the list of maps that you can choose from. If you detect is map, choose the most appropiate from the following list "+help_main_map_prompts+" Only select from the avaialable options on the list. \
+		then you will be provided of the list of maps that you can choose from. If you detect is map, choose the most appropiate from the following list "+help_main_map_prompts+" Only select from the avaialable options on the list, nothing else! \
 		and reply only with the name of the map. format: maps->atmosphere/rainfall you will choose one option only\
 		Overlay: if we are talking directly or indirectly about some kind of information that can be overlayed, like timezones, country or continent borders, railroads, wind circulation, water currents, rivers that can help in visualization,\
-		then you will be provided of the list of maps that you can choose from. If you detect is an overlay, choose the most appropiate from the following list "+help_overlays_prompts+" Only select from the avaialable options on the list. \
+		then you will be provided of the list of maps that you can choose from. If you detect is an overlay, choose the most appropiate from the following list "+help_overlays_prompts+" Only select from the avaialable options on the list, nothing else! \
 		and reply only with the name of the map. format overlay->timezones\n\
 		Animate: if we ask to animate the context with a video or animation, let's say we are talking about weather, then you will choose one of the options that you think it's the most adecuate to animate, so in this case can be temperature, huracans, winds, etc.\
-		we have two different categories, land and atmosphere, and each one has a subdivision that you will see in the video map list next,you will choose from the following options"+help_video_maps_prompt+" and reply only with the line of the full path that you chose and the format will be like this: animate->atmosphere/ncss_chem/ncss_chem_hls, for example.\
-		Finally in every prompt the first word will be the type of prompt you are dealing with. with this format 'category->' that's imperative!!!" 
+		we have two different categories, land and atmosphere, and each one has a subdivision that you will see in the video map list next,you will choose from the following options"+help_video_maps_prompt+" and reply only with the line of the full path that you chose and the format will be like this: animate->atmosphere/ncss_chem/ncss_chem_hls, for example, and nothing else!\
+		Finally in every prompt the first word will be the type of prompt you are dealing with. with this format 'category->' , and don't include any kind of spaces that's imperative!!!" 
 	}
 ];
 const input_field = document.getElementById('chat-input');
@@ -35,36 +35,8 @@ function handleSendMessage(event) {
 	if (event.type === 'click' || (event.type === 'keypress' && event.key === 'Enter')) {
 		event.preventDefault();
 		sendMessage(input_field.value);
-		//earthSphere.changeTexture(earthTexture, earthShaderProgram);
 	}
 }
-
-// async function sendToAPI(_message, callback) {
-// 	if (!_message) return;
-// 	try {
-// 		const response = await fetch('/api/chat', {
-// 			method: 'POST',
-// 			headers: { 'Content-type': 'application/json', },
-// 			body: JSON.stringify({
-// 				prompt: _message,
-// 				conversation: conversationHistory
-// 			})
-// 		});
-
-// 		if (!response.ok && response.status === 429) {
-// 			//network issues
-// 			alert('API rate limit exceeded. Retrying...');
-// 			setTimeout(() => sendToAPI(_message, callback), 2000);
-// 			return;
-// 		}
-// 		const callback_data = await response.json();
-// 		if (callback && typeof callback === 'function') {
-// 			callback(callback_data);
-// 		}
-// 	} catch (error) {
-// 		console.error('Error:', error);
-// 	}
-// }
 
 let isRequestPending = false;
 let requestQueue = [];
@@ -91,7 +63,7 @@ async function processQueue() {
             // Network issues or rate limit exceeded
             console.log('API rate limit exceeded. Retrying...');
             setTimeout(() => {
-                requestQueue.unshift({ message, callback }); // Re-add to the front of the queue
+                requestQueue.unshift({ message, callback });
                 isRequestPending = false;
                 processQueue();
             }, 2000);
@@ -146,7 +118,7 @@ async function askForMap(_message, callback) {
 	}
 }
 
-function  sendMessage(message) {
+function sendMessage(message) {
 	if (message) {
 		displayUserMessage(`Me: ${message} \n\n`);
 		conversationHistory.push({ "role": "user", "content": message });
@@ -175,21 +147,21 @@ function  sendMessage(message) {
 			console.log(category);
 			console.log(info);
 			switch (category) {
-				case "navigation":
-					setTimeout(() => {
-						let small_helper = "Provide me only short paragraph of information from the place we are talking about.\
-						You will not mention that your are an AI, or any information non relevant to the topic asked. Talk in a friendly manner as if you were talking to kids. \
-						Don't talk about politics, government, or any controversial topic. Nor you can talk about holocaust or any other controversial/related topic. \
-						You can also ask me to show you a map of the place we are talking about, or ask me for more information about it.";
-						const x = small_helper + data.reply;
-						sendToAPI(x, (follow_up_data) => {
-							displayGPTMessage(`ChatGPT: ${follow_up_data.reply}\n`);
-						})
-					}, 20);
-					let coordinates = data.reply.split(" ").splice(-2);
-					coordinates[0] = coordinates[0].split(",")[0]
-					alert(coordinates);
-					break;
+				// case "navigation":
+				// 	setTimeout(() => {
+				// 		let small_helper = "Provide me only short paragraph of information from the place we are talking about.\
+				// 		You will not mention that your are an AI, or any information non relevant to the topic asked. Talk in a friendly manner as if you were talking to kids. \
+				// 		Don't talk about politics, government, or any controversial topic. Nor you can talk about holocaust or any other controversial/related topic. \
+				// 		You can also ask me to show you a map of the place we are talking about, or ask me for more information about it.";
+				// 		const x = small_helper + data.reply;
+				// 		sendToAPI(x, (follow_up_data) => {
+				// 			displayGPTMessage(`ChatGPT: ${follow_up_data.reply}\n`);
+				// 		})
+				// 	}, 20);
+				// 	let coordinates = data.reply.split(" ").splice(-2);
+				// 	coordinates[0] = coordinates[0].split(",")[0]
+				// 	alert(coordinates);
+				// 	break;
 
 				case "maps":
 					const actualmap = info.split("/")[1];				
@@ -199,14 +171,33 @@ function  sendMessage(message) {
 						}else{
 							loadMainTexture(gl, atmosphereRoutes[actualmap]);
 						}
-						// loadMa(gl, overlayRoutes[info])
 						let small_helper = "Provide me only short paragraph of information from the things or properties we are talking about.\
-						You will not mention that your are an AI, or any information non relevant to the topic asked. Talk in a friendly manner and avoid any kind of controversial topic.";
+						You will not mention that your are an AI, or any information non relevant to the topic asked. Talk in a friendly manner and avoid any kind of controversial topic.\
+						by the end of the query you can ask me if i want an animation of the context we are talking about or if you want to know more information about it.";
 						const x = small_helper + data.reply;
 						sendToAPI(x, (follow_up_data) => {
-							displayGPTMessage(`ChatGPT: ${follow_up_data.reply.split("->")[1]}\n`);
+							displayGPTMessage(`ChatGPT: ${follow_up_data.reply}\n`);
 						})
 					}, 30);
+					setTimeout(() => {
+						let small_helper = "Provide me only with the coordinates of the place we are talking to in this format: (lat, long) and nothing else";
+						const x = small_helper + data.reply;
+						sendToAPI(x, (follow_up_data) => {
+							const regex = /[-+]?[0-9]*\.?[0-9]+/g;
+							console.log(follow_up_data.reply);
+							const matches = follow_up_data.reply.match(regex);
+
+							if (matches && matches.length === 2) {
+							const lat = parseFloat(matches[0]);
+							const lon = parseFloat(matches[1]);
+							placeMarker([lat, lon]);
+							
+							} else {
+							console.log("Invalid coordinates format");
+							}
+						})
+					}, 10);
+					break;
 					break;
 
 				case "overlay":
@@ -222,11 +213,10 @@ function  sendMessage(message) {
 					break;
 				
 				case "animate":
-					const x = "Based on the prompt, choose one of the following options "+help_video_maps_prompt+" that fits best the context.\
-					reply with the full line of the path of the video you chose and only taking into account this query format and don't include spaces in between: animate->land/birds_migration \
-					If you happen to have an already query like the one I mentioned, show only that one, not repeated like this: animate->ocean/tsunami_indiaanimate/tsunami_indiaanimate \
-					Finally, if you did not identify any video or animation, just choose any of the options and reply with the full path of the video you chose";
-					sendToAPI(data.reply, (follow_up_data) => {
+					const x = "Please provide me information about the animation we are seeing, this animation came from the Science on a Sphere dataset from NOAA, feel free to provide scientific information to best describe the scene\
+					You will not mention that your are an AI, or any information non relevant to the topic asked. Talk in a friendly manner and avoid any kind of controversial topic.";
+
+					sendToAPI((data.reply + x), (follow_up_data) => {
 						setTimeout(() => {
 							const p = info.split("/")[1];
 							loadVideoTexture(gl, "/api/video/"+info+"/"+p+".m3u8")
@@ -238,7 +228,43 @@ function  sendMessage(message) {
 							})
 						}, 30);	
 					});
+					setTimeout(() => {
+						let small_helper = "Provide me only with the coordinates of the place we are talking to in this format: (lat, long) and nothing else";
+						const x = small_helper + data.reply;
+						sendToAPI(x, (follow_up_data) => {
+							const regex = /[-+]?[0-9]*\.?[0-9]+/g;
+							console.log(follow_up_data.reply);
+							const matches = follow_up_data.reply.match(regex);
+
+							if (matches && matches.length === 2) {
+							const lat = parseFloat(matches[0]);
+							const lon = parseFloat(matches[1]);
+							placeMarker([lat, lon]);
+							
+							} else {
+							console.log("Invalid coordinates format");
+							}
+						})
+					}, 10);
 					break;
+					break;
+
+					case "animation":
+						const p = "Please provide me information about the animation we are seeing, this animation came from the Science on a Sphere dataset from NOAA, feel free to provide scientific information to best describe the scene\
+						You will not mention that your are an AI, or any information non relevant to the topic asked. Talk in a friendly manner and avoid any kind of controversial topic.";
+						sendToAPI((data.reply + p), (follow_up_data) => {
+							setTimeout(() => {
+								const p = info.split("/")[1];
+								loadVideoTexture(gl, "/api/video/"+info+"/"+p+".m3u8")
+								let small_helper = "Provide me only short paragraph of information from the things or properties we are talking about.\
+								You will not mention that your are an AI, or any information non relevant to the topic asked. Talk in a friendly manner and avoid any kind of controversial topic.";
+								const x = small_helper + data.reply;
+								sendToAPI(x, (follow_up_data) => {
+									displayGPTMessage(`ChatGPT: ${follow_up_data.reply}\n`);
+								})
+							}, 30);	
+						});
+						break;
 
 				case "transformation":
 					data.reply = data.reply.toLowerCase();
@@ -272,6 +298,41 @@ function  sendMessage(message) {
 							displayGPTMessage(`ChatGPT: ${follow_up_data.reply}\n`);
 						})
 					}, 20);
+					setTimeout(() => {
+						let small_helper = "Provide me only with the coordinates of the place we are talking to in this format: (lat, long) and nothing else";
+						const x = small_helper + data.reply;
+						sendToAPI(x, (follow_up_data) => {
+							const regex = /[-+]?[0-9]*\.?[0-9]+/g;
+							console.log(follow_up_data.reply);
+							const matches = follow_up_data.reply.match(regex);
+
+							if (matches && matches.length === 2) {
+							const lat = parseFloat(matches[0]);
+							const lon = parseFloat(matches[1]);
+							placeMarker([lat, lon]);
+							
+							} else {
+							console.log("Invalid coordinates format");
+							}
+						})
+					}, 10);
+					break;
+
+				case "navigation":
+					console.log("------------------");
+					const regex = /[-+]?[0-9]*\.?[0-9]+/g;
+					console.log(data.reply);
+					const matches = data.reply.match(regex);
+
+					if (matches && matches.length === 2) {
+					const lat = parseFloat(matches[0]);
+					const lon = parseFloat(matches[1]);
+					placeMarker([lat, lon]);
+					
+					} else {
+					console.log("Invalid coordinates format");
+					}
+					
 					break;
 			}
 

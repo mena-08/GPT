@@ -1,5 +1,5 @@
-import { gl, earthShaderProgram, renderSkybox, bumpTexture, earthSphere, earthTexture, moonSphere, moonTexture, videoTexture, specularTexture, agentSphere, agentShaderProgram } from './renderWebGL';
-import { startRecording, stopRecording, requestMicrophoneAccess } from './audioManager';
+import { gl, earthShaderProgram,initialTexture, renderSkybox, bumpTexture, earthSphere, earthTexture, moonSphere, moonTexture, videoTexture, specularTexture, agentSphere, agentShaderProgram, loadVideoTexture} from './render-webgl';
+import { startRecording, stopRecording, requestMicrophoneAccess } from './audio-manager';
 import { quat, vec3 } from 'gl-matrix';
 import { WGS84ToECEF } from './utilities';
 
@@ -15,8 +15,7 @@ let initialGripPosition = vec3.create();
 
 export async function onEnterXRClicked() {
     try {
-        const session = await navigator.xr.requestSession('immersive-ar', {
-            //optionalFeatures: ["depth-sensing", "dom-overlay", "hand-tracking", "hit-test", "layers", "light-estimation", "viewer"]
+        const session = await navigator.xr.requestSession('immersive-vr', {
             optionalFeatures: ["local", "hand-tracking", "depth-sensing", "hit-test", "light-estimation", "transparent"]
         });
         onSessionStarted(session);
@@ -86,7 +85,7 @@ function onSelectStart(event) {
 
     //voice recording start
     if (event.inputSource.handedness === "left") {
-        startRecording(true);
+        //startRecording(true);
     }
     const controllerIndex = controllers.findIndex(controller => controller.inputSource === event.inputSource);
     if (controllerIndex !== -1) {
@@ -96,8 +95,7 @@ function onSelectStart(event) {
 
 function onSelectEnd(event) {
     if (event.inputSource.handedness === "left") {
-        gesture=false;
-        stopRecording();
+        //stopRecording();
         //gesture=false;
     }
     vec3.set(initialGripPosition, 0, 0, 0);
@@ -119,6 +117,7 @@ function handleController(controller, frame) {
             handleGestures(true,controller, frame);
         }
     }
+    
 }
 function handleGestures(follow,controller, frame) {
     gesture = follow;
@@ -206,10 +205,8 @@ function handleView(view, session) {
     gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
     const viewMatrix = view.transform.inverse.matrix;
     const projectionMatrix = view.projectionMatrix;
-    // const positionOnSurface = WGS84ToECEF(19.432601, -99.13342, 0);
-    // marker.setPositionOnSphere(positionOnSurface, earthSphere);
     
-    earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix);
+    earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, initialTexture);
     if(gesture){
         agentSphere.draw(agentShaderProgram, viewMatrix, projectionMatrix);
     }    
