@@ -37,7 +37,7 @@ function checkMicrophoneSupport() {
 }
 
 function checkVRSessions() {
-    navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
+    navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
         const button = document.getElementById('xr-button');
         if (supported) {
             button.addEventListener('click', () => onEnterXRClicked(true));

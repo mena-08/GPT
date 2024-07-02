@@ -11,8 +11,11 @@
 </head>
 
 <body>
-
-    <canvas id="webgl-canvas"></canvas>
+    <div id="container">
+        <div id="webgl-container">
+            <canvas id="webgl-canvas"></canvas>
+        </div>
+    </div>
 
     <div id="chat-container">
         <div id="chat-box">
@@ -37,6 +40,11 @@
     </div> -->
     <div id="xr-button-container">
         <button id="xr-button" type="button">Enter VR!!</button>
+    </div>
+
+    <div id="overlay-container" style="visibility: hidden;">
+        <button id="xr-button-microphone" type="button">Talk to me </button>
+        <button id="xr-button-reset" type="button">Exit</button>
     </div>
 
 </body>

@@ -42,7 +42,8 @@ class Sphere {
     //speak capabilities
     //-------------------    
     rotate(orientation) {
-        this.orientation = orientation;
+        quat.copy(this.orientation, orientation);
+        this.updateModelMatrix();
     }
 
     scale(factor){

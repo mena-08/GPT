@@ -7,16 +7,21 @@ let xrSession = null;
 let xrReferenceSpace = null;
 let controllers = [];
 let gesture = null;
+let uiElement = null;
 
 let sphereOrientation = quat.create();
 let spherePosition = vec3.create();
 let initialGripPosition = vec3.create();
 
-
+//lets try the dom overlay
 export async function onEnterXRClicked() {
     try {
-        const session = await navigator.xr.requestSession('immersive-vr', {
-            optionalFeatures: ["local", "hand-tracking", "depth-sensing", "hit-test", "light-estimation", "transparent"]
+        uiElement = document.getElementById('overlay-container');
+        uiElement.style.visibility = 'visible';
+        const session = await navigator.xr.requestSession('immersive-ar', {
+            //optionalFeatures: ["local", "hand-tracking", "depth-sensing", "hit-test", "light-estimation", "transparent"]
+            optionalFeatures:["dom-overlay", "local","hand-tracking", "transparent"],
+            domOverlay: { root: uiElement }
         });
         onSessionStarted(session);
     } catch (e) {
@@ -31,6 +36,7 @@ function onSessionStarted(session) {
     //audio.play();
 
     //create an XRWebGLLayer using the XR Session and my WebGL context
+
     xrSession = session;
     let nativeScaleFactor = XRWebGLLayer.getNativeFramebufferScaleFactor(xrSession);
     let xrLayer = new XRWebGLLayer(session, gl, { framebufferScaleFactor: nativeScaleFactor, alpha: true });
@@ -209,9 +215,18 @@ function handleView(view, session) {
     earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, initialTexture);
     if(gesture){
         agentSphere.draw(agentShaderProgram, viewMatrix, projectionMatrix);
-    }    
-
-
+    }
     //moonSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, moonTexture);
     //marker.draw(earthShaderProgram, viewMatrix, projectionMatrix);
 }
+
+const buttonMICROXR = document.getElementById('xr-button-microphone');
+buttonMICROXR.addEventListener('click', () => {
+    startRecording(true);
+    alert('listening');
+});
+
+const buttonMICROX2 = document.getElementById('xr-button-reset');
+buttonMICROX2.addEventListener('click', () => {
+    stopRecording();
+});

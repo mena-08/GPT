@@ -52,12 +52,11 @@ async function startRecording(vr) {
             audio_chunks.push(event.data);
         };
         media_recorder.onstop = () => {
-            if (!isSending) {
-                isSending = true;
-                const audio_blob = new Blob(audio_chunks, { type: 'audio/wav' });
-                audio_chunks = [];
-                sendAudioMessage(audio_blob, vr);
-            }
+            
+            const audio_blob = new Blob(audio_chunks, { type: 'audio/wav' });
+            audio_chunks = [];
+            sendAudioMessage(audio_blob, vr);
+            
         };
         media_recorder.start();
     } catch (error) {
@@ -85,8 +84,6 @@ async function sendAudioMessage(audioBlob) {
         sendMessage(data.conversation[0].content);
     } catch (error) {
         console.error('Error:', error);
-    } finally {
-        isSending = false;
     }
 }
 

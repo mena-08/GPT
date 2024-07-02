@@ -1,4 +1,5 @@
 import TWEEN from '@tweenjs/tween.js';
+import camera from './camera';
 import { vec3 } from "gl-matrix";
 
 function WGS84ToECEF(lat, long, R) {
@@ -15,30 +16,19 @@ function WGS84ToECEF(lat, long, R) {
     return new vec3.fromValues(-x, z, y);
 }
 
-//refactor this to use the new camera an not the three one
-function moveCameraToTarget(target_position, camera, duration = 3000) {
-    let mid_point = target_position.clone().normalize().multiplyScalar(5);
-    mid_point.y += 6;
+//TODO: Maybe use this if we have more objects, we need to rotate the sphere and move the camera
+function moveCamera(from, to, duration = 3000) {
+    const initialPosition = { x: from[0], y: from[1], z: from[2] };
+    const finalPosition = { x: to[0], y: to[1], z: to[2] };
 
-    //set up the tween to move to the mid-point first
-    const tweenMid = new TWEEN.Tween(camera.position)
-        .to({ x: mid_point.x, y: mid_point.y, z: mid_point.z }, duration)
+    new TWEEN.Tween(initialPosition)
+        .to(finalPosition, duration)
         .easing(TWEEN.Easing.Quadratic.InOut)
         .onUpdate(() => {
-            camera.lookAt(target_position);
+            camera.setPosition(initialPosition.x, initialPosition.y, initialPosition.z);
+            camera.updateViewMatrix();
         })
-        .onComplete(() => {
-            let normal_point = target_position.clone().normalize().multiplyScalar(1.03);
-            //reaching the mid point
-            const tweenTarget = new TWEEN.Tween(camera.position)
-                .to({ x: target_position.x + normal_point.x, y: target_position.y + normal_point.y, z: target_position.z + normal_point.z }, duration)
-                .easing(TWEEN.Easing.Quadratic.InOut)
-                .onUpdate(() => {
-                    camera.lookAt(target_position);
-                }).start();
-        });
-    tweenMid.start();
+        .start();
 }
 
-
-export { moveCameraToTarget, WGS84ToECEF };
+export { WGS84ToECEF, moveCamera };

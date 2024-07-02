@@ -39,6 +39,39 @@ html, body {
     z-index: 1000; 
 }
 
+/* TODO: Have a better colors or smthng like that */
+#overlay-container {
+    position: absolute;
+    bottom: 10%;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+#xr-button-microphone {
+    padding: 15px 20px;
+    background-color: #4CAF50; 
+    border-radius: 10px;
+    color: white;
+    text-align: center;
+    display: inline-block;
+    font-size: 60px;
+}
+
+#xr-button-reset {
+    padding: 15px 20px;
+    background-color: #3574fd; 
+    border-radius: 10px;
+    color: white;
+    text-align: center;
+    display: inline-block;
+    font-size: 60px;
+}
+
 #xr-button {
     display: block;
     width: 200px;

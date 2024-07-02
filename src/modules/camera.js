@@ -69,7 +69,6 @@ class Camera {
         this.target[0] = x;
         this.target[1] = y;
         this.target[2] = z;
-        this.updateViewMatrix();
     }
 
     setUp(x, y, z) {

@@ -19,6 +19,8 @@
 //TODO: Refactor so we can have a one scene and we can add elements to it
 
 import Scene from "./scene";
+import { vec3, quat } from "gl-matrix";
+import TWEEN from '@tweenjs/tween.js';
 import camera from "./camera";
 import { Marker } from "./marker";
 import { Sphere } from "./sphere";
@@ -26,6 +28,7 @@ import { eventEmitter } from "./event-emitter";
 import { loadTexture, loadVideoTextureMemory } from "./textures";
 import { shaderProgramInit } from "./load-shaders";
 import { updateCameraPosition, updateCameraOrbit } from "./controllers";
+import { moveCamera, moveCameraToTarget, WGS84ToECEF } from "./utilities";
 
 import vertexShaderSource from '../shaders/earthVertexShader.vert';
 import agentVertexShaderSource from '../shaders/agentVertexShader.vert';
@@ -64,6 +67,7 @@ async function setup(canvas) {
     }
     camera.position = [0, 0, 5];
     let lastTime = 0;
+    //moveCameraToTarget([0,10,0]);
 
     initTextures(gl);
     earthShaderProgram = shaderProgramInit(gl, vertexShaderSource, fragmentShaderSource);
@@ -76,9 +80,10 @@ async function setup(canvas) {
     //earthSphere.scale();
 
     marker = new Marker(gl, 0.1, 0.01, 32);
-    // marker.setPositionOnSphere([40.4637, 3.7492], earthSphere);
+    //marker.setPositionOnSphere([59.305, 18.078], earthSphere);
 
-    //console.log(overlayRoutes.timezones);
+    //rotateSphereToCoordinate(-26.1554, -226.5380, 1.0, 10000);
+    //moveCamera(camera.position, [0, 0, 0.5], 10000);
 
     function animate(now) {
         if (!lastTime) lastTime = now;
@@ -95,6 +100,8 @@ async function setup(canvas) {
         updateCameraOrbit(deltaTime);
         camera.updateViewMatrix();
 
+        TWEEN.update();
+
         const viewMatrix = camera.getViewMatrix();
         const projectionMatrix = camera.getProjectionMatrix();
         marker.draw(earthShaderProgram, viewMatrix, projectionMatrix);
@@ -102,48 +109,11 @@ async function setup(canvas) {
         earthSphere.draw(earthShaderProgram, viewMatrix, projectionMatrix, initialTexture);
 
         gl.uniform1f(gl.getUniformLocation(earthShaderProgram, 'u_time'), currentTime);
-        //gl.uniform1f(gl.getUniformLocation(agentShaderProgram, 'u_time'), currentTime);
         lastTime = now;
         requestAnimationFrame(animate);
     }
     requestAnimationFrame(animate);
 }
-
-// async function setup(canvas) {
-//     const gl = canvas.getContext('webgl', { xrCompatible: true, alpha: true });
-//     if (!gl) {
-//         alert('WebGL is not supported');
-//         return;
-//     }
-
-//     const scene = new Scene(gl);
-//     camera.position = [0, 0, 5];
-
-//     // Initialize Shaders
-//     scene.addShader('earthShader', vertexShaderSource, fragmentShaderSource);
-//     scene.addShader('agentShader', agentVertexShaderSource, agentFragmentShaderSource);
-
-//     // Initialize Objects
-//     const earthSphere = new Sphere(gl, 0.4, 255, false);
-//     const agentSphere = new Sphere(gl, 0.07, 100, false, true);
-//     agentSphere.shaderName = 'agentShader';
-//     earthSphere.shaderName = 'earthShader';
-
-//     scene.addObject(earthSphere);
-//     scene.addObject(agentSphere);
-
-//     const marker = new Marker(gl, 0.1, 0.01, 32);
-//     marker.shaderName = 'earthShader';
-//     scene.addObject(marker);
-
-//     function animate(now) {
-//         requestAnimationFrame(animate);
-//         scene.draw();
-//     }
-
-//     requestAnimationFrame(animate);
-// }
-
 
 async function initTextures(gl) {
     //load the lowres texture first
@@ -158,7 +128,8 @@ async function initTextures(gl) {
         agentSphere.texture = agentTexture;
     }
     if (bumpTexture && specularTexture) {
-        loadHighQualityTexture(gl);
+        //TODO: Load the bump and specular textures with high quality stuff
+        //loadHighQualityTexture(gl);
         //if the low res is loaded, load the high res
         //eventEmitter.emit('loadSpecialTextures', bumpTexture, specularTexture, earthShaderProgram);
     }
@@ -214,6 +185,44 @@ function onWindowResize() {
     canvas.width = document.body.clientWidth;
     canvas.height = document.body.clientHeight;
     camera.setViewport(canvas.width, canvas.height);
+}
+
+//TODO: Refactor this to use the new camera with the actual movements
+function rotateSphereToCoordinate(lat, long, R, duration = 3000) {
+    const targetVec = WGS84ToECEF(lat, long, R);
+
+    // Normalize targetVec to get the direction vector
+    vec3.normalize(targetVec, targetVec);
+
+    // Invert necessary axes based on the current orientation and target position
+    // Assuming initial view is towards -Z axis and flipping Y and Z coordinates
+    const flipX = (targetVec[0] < 0) ? -1 : 1;
+    const flipY = (targetVec[1] < 0) ? -1 : 1;
+    const flipZ = (targetVec[2] < 0) ? -1 : 1;
+
+    targetVec[0] = -targetVec[0];
+    targetVec[1] *= flipY;
+    targetVec[2] *= flipZ;
+
+    // Compute the quaternion that rotates the sphere from the current orientation to the targetVec
+    const currentFront = vec3.transformQuat(vec3.create(), vec3.fromValues(0, 0, -1), earthSphere.getRotation());
+    const rotationQuat = quat.create();
+    quat.rotationTo(rotationQuat, currentFront, targetVec);
+
+    // Combine with the current orientation of the sphere
+    const currentOrientation = earthSphere.getRotation();
+    const targetOrientation = quat.create();
+    quat.multiply(targetOrientation, rotationQuat, currentOrientation);
+
+    // Use TWEEN.js to smoothly transition between orientations
+    new TWEEN.Tween({ t: 0 })
+        .to({ t: 1 }, duration)
+        .easing(TWEEN.Easing.Quadratic.InOut)
+        .onUpdate(({ t }) => {
+            const interpolatedOrientation = quat.slerp(quat.create(), currentOrientation, targetOrientation, t);
+            earthSphere.rotate(interpolatedOrientation);
+        })
+        .start();
 }
 
 window.addEventListener('resize', onWindowResize);

@@ -53,17 +53,21 @@ class Marker {
 
     setPositionOnSphere(coordinates, sphere){
         let position = WGS84ToECEF(coordinates[0], coordinates[1], sphere.radius);
-        console.log(position); 
+        console.log("Real world coordinates: ", coordinates);
+        console.log("Position on sphere: ", position); 
+
         //direction vector
         let direction = vec3.create();
         vec3.subtract(direction, sphere.getPosition(), position);
         vec3.normalize(direction, direction);
+        console.log("Direction vector: ", direction);
 
         //marker position relative to the spheres surface
         const distanceFromSurface = -0.1;
         let offsetPosition = vec3.create();
         vec3.scale(offsetPosition, direction, distanceFromSurface);
         vec3.add(offsetPosition, position, offsetPosition);
+        console.log("Offset position: ", offsetPosition);
 
         //apply the sphere's current rotation to the direction vector
         let transformedDirection = vec3.create();
